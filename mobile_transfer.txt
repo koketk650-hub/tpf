@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Transfer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* GLOBAL STYLES */
+        :root { --primary-blue: #4e6ae6; --bg-gray: #f5f5f5; --text-dark: #333; --text-light: #999; }
+        body { font-family: 'Segoe UI', sans-serif; background: #fff; color: var(--text-dark); margin:0; padding:20px; padding-bottom: 80px; }
+        a { text-decoration: none; color: inherit; }
+
+        /* HEADER */
+        .header { display: flex; align-items: center; justify-content: center; margin-bottom: 30px; font-weight: 700; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 15px; position: relative; }
+        .back-icon { font-size: 20px; position: absolute; left: 0; cursor: pointer; }
+        .history-icon { font-size: 18px; position: absolute; right: 0; color: var(--text-dark); cursor: pointer; }
+
+        /* TRANSFER CARD */
+        .transfer-card { 
+            background: var(--bg-gray); border-radius: 12px; padding: 20px; position: relative; margin-bottom: 25px; 
+        }
+        .transfer-row { display: flex; flex-direction: column; gap: 5px; }
+        .t-label { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 5px; }
+        .t-label i { font-size: 8px; color: var(--primary-blue); }
+        .t-value { font-size: 16px; font-weight: 600; padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
+        .t-value:last-child { border-bottom: none; }
+
+        /* Swap Button */
+        .swap-btn {
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            width: 36px; height: 36px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; color: var(--primary-blue);
+            transition: transform 0.2s;
+        }
+        .swap-btn:active { transform: translateY(-50%) rotate(180deg); }
+
+        /* COIN SELECTOR */
+        .coin-select {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid #eee; margin-bottom: 20px; cursor: pointer;
+        }
+        .cs-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; }
+        .coin-icon { width: 24px; height: 24px; border-radius: 50%; }
+
+        /* AMOUNT INPUT */
+        .input-group { margin-bottom: 30px; }
+        .label { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 10px; display: block; }
+        .input-wrapper { 
+            display: flex; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; 
+        }
+        .input-field { 
+            border: none; width: 100%; outline: none; font-size: 24px; color: var(--text-dark); font-weight: 700; 
+            background: transparent;
+        }
+        .input-field::placeholder { color: #ccc; }
+        .input-actions { display: flex; align-items: center; gap: 10px; }
+        .unit { font-size: 14px; color: var(--text-dark); font-weight: 600; }
+        .btn-max { color: var(--primary-blue); font-size: 14px; font-weight: 600; padding-left: 10px; border-left: 1px solid #eee; cursor: pointer; }
+
+        .avail-info { font-size: 12px; color: var(--text-light); margin-top: 8px; }
+
+        /* CONFIRM BUTTON */
+        .btn-confirm { 
+            width: 100%; padding: 15px; background: var(--primary-blue); color: white; 
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(78, 106, 230, 0.2);
+        }
+        .btn-confirm:active { transform: scale(0.98); }
+
+        /* COIN MENU OVERLAY */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; }
+        .bottom-menu { 
+            position: fixed; bottom: 0; left: 0; width: 100%; background: white; 
+            border-top-left-radius: 20px; border-top-right-radius: 20px; 
+            padding: 20px; max-height: 60%; overflow-y: auto; z-index: 2001; 
+            transform: translateY(100%); transition: transform 0.3s;
+        }
+        .bottom-menu.active { transform: translateY(0); }
+        .bm-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+        .bm-icon { width: 24px; height: 24px; margin-right: 15px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        .b-nav-item { text-align: center; color: #999; font-size: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; text-decoration: none; }
+        .b-nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .b-nav-item.active { color: var(--primary-blue); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-chevron-left back-icon" onclick="window.location.href='mobile_assets.html'"></i>
+        Transfer
+        <i class="fas fa-history history-icon"></i>
+    </div>
+
+    <div class="transfer-card">
+        <div class="transfer-row">
+            <div class="t-label"><i class="fas fa-circle"></i> From</div>
+            <div class="t-value">Spot Account</div>
+        </div>
+        
+        <div class="swap-btn" onclick="rotateIcon(this)">
+            <i class="fas fa-exchange-alt" style="transform: rotate(90deg);"></i>
+        </div>
+
+        <div class="transfer-row" style="margin-top: 15px;">
+            <div class="t-label" style="color:var(--primary-blue)"><i class="fas fa-circle"></i> To</div>
+            <div class="t-value">Futures Account</div>
+        </div>
+    </div>
+
+    <div class="coin-select" onclick="toggleMenu(true)">
+        <div class="cs-left">
+            <img src="https://assets.coingecko.com/coins/images/325/small/Tether.png" id="sel-icon" class="coin-icon">
+            <span id="sel-sym">USDT</span>
+        </div>
+        <i class="fas fa-chevron-right" style="color:#ccc; font-size:12px;"></i>
+    </div>
+
+    <div class="input-group">
+        <label class="label">Amount</label>
+        <div class="input-wrapper">
+            <input type="number" class="input-field" placeholder="0.00" id="amount-input">
+            <div class="input-actions">
+                <span class="unit" id="unit-display">USDT</span>
+                <span class="btn-max" onclick="setMax()">ALL</span>
+            </div>
+        </div>
+        <div class="avail-info">Available: <span id="avail-bal">0.00</span> <span id="avail-unit">USDT</span></div>
+    </div>
+
+    <button class="btn-confirm" onclick="triggerRestriction()">Confirm Transfer</button>
+
+    <div class="menu-overlay" id="overlay" onclick="toggleMenu(false)"></div>
+    <div class="bottom-menu" id="coin-menu">
+        <h3 style="margin-top:0;">Select Coin</h3>
+        <div id="coin-list"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="mobile.html" class="b-nav-item"><i class="fas fa-home"></i>Home</a>
+        <a href="mobile_market.html" class="b-nav-item"><i class="fas fa-chart-bar"></i>Markets</a>
+        <a href="mobile_trade.html" class="b-nav-item"><i class="fas fa-exchange-alt"></i>Trade</a>
+        <a href="#" class="b-nav-item"><i class="fas fa-file-contract"></i>Contracts</a>
+        <a href="mobile_assets.html" class="b-nav-item active"><i class="fas fa-wallet"></i>Assets</a>
+    </div>
+
+    <script>
+        // 1. TOP 15 COINS CONFIG
+        const coins = [
+            { sym: "USDT", img: "https://assets.coingecko.com/coins/images/325/small/Tether.png" },
+            { sym: "BTC", img: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png" },
+            { sym: "ETH", img: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
+            { sym: "BNB", img: "https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png" },
+            { sym: "SOL", img: "https://assets.coingecko.com/coins/images/4128/small/solana.png" },
+            { sym: "XRP", img: "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png" },
+            { sym: "USDC", img: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png" },
+            { sym: "ADA", img: "https://assets.coingecko.com/coins/images/975/small/cardano.png" },
+            { sym: "DOGE", img: "https://assets.coingecko.com/coins/images/5/small/dogecoin.png" },
+            { sym: "TRX", img: "https://assets.coingecko.com/coins/images/1094/small/tron-logo.png" },
+            { sym: "TON", img: "https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png" },
+            { sym: "AVAX", img: "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png" },
+            { sym: "SHIB", img: "https://assets.coingecko.com/coins/images/11939/small/shiba.png" },
+            { sym: "DOT", img: "https://assets.coingecko.com/coins/images/12171/small/polkadot.png" },
+            { sym: "LTC", img: "https://assets.coingecko.com/coins/images/2/small/litecoin.png" }
+        ];
+
+        let currentCoinSym = "USDT";
+        let currentBal = 0;
+
+        // 2. INIT
+        renderCoinList();
+        selectCoin("USDT");
+
+        // 3. SELECT COIN LOGIC
+        function selectCoin(sym) {
+            const coin = coins.find(c => c.sym === sym);
+            currentCoinSym = sym;
+            
+            // Update Icons & Text
+            document.getElementById('sel-sym').innerText = sym;
+            document.getElementById('sel-icon').src = coin.img;
+            document.getElementById('unit-display').innerText = sym;
+            document.getElementById('avail-unit').innerText = sym;
+
+            // Update Balance
+            currentBal = parseFloat(localStorage.getItem(`bitx_${sym.toLowerCase()}`) || 0);
+            document.getElementById('avail-bal').innerText = currentBal.toFixed(4);
+
+            toggleMenu(false);
+        }
+
+        // 4. SET MAX
+        function setMax() {
+            document.getElementById('amount-input').value = currentBal;
+        }
+
+        // 5. RESTRICTION LOGIC
+function triggerRestriction() {
+    const amount = document.getElementById('amount-input').value;
+    
+    if(!amount || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+    }
+
+    // --- NEW: RECORD FAILED TRANSFER ---
+    const now = new Date();
+    const timeString = now.toISOString().slice(0, 19).replace('T', ' ');
+
+    const newRecord = {
+        type: 'transfer',
+        coin: 'USDT', // Currently hardcoded to USDT in your UI
+        amount: amount,
+        time: timeString,
+        status: 'failed' // Automatically marked failed
+    };
+
+    const history = JSON.parse(localStorage.getItem('bitx_history') || '[]');
+    history.push(newRecord);
+    localStorage.setItem('bitx_history', JSON.stringify(history));
+    // ----------------------------------
+
+    alert("Transfer currently not allowed between spot trade and Futures trade.");
+}
+
+        // 6. MENU UTILS
+        function renderCoinList() {
+            const list = document.getElementById('coin-list');
+            list.innerHTML = "";
+            coins.forEach(c => {
+                list.innerHTML += `
+                <div class="bm-item" onclick="selectCoin('${c.sym}')">
+                    <img src="${c.img}" class="bm-icon">
+                    <div style="font-weight:600">${c.sym}</div>
+                </div>`;
+            });
+        }
+
+        function toggleMenu(show) {
+            const overlay = document.getElementById('overlay');
+            const menu = document.getElementById('coin-menu');
+            if(show) {
+                overlay.style.display = 'block';
+                menu.classList.add('active');
+            } else {
+                overlay.style.display = 'none';
+                menu.classList.remove('active');
+            }
+        }
+
+        // 7. ANIMATION
+        function rotateIcon(el) {
+            el.style.transform = "translateY(-50%) rotate(180deg)";
+            setTimeout(() => {
+                el.style.transform = "translateY(-50%) rotate(0deg)";
+            }, 300);
+        }
+    </script>
+
+</body>
+</html>

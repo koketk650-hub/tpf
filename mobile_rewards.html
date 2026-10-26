@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>if(!localStorage.getItem('bitx_user_id')) window.location.href = 'mobile.html';</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Rewards</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg: #131722; --card: #1e222d; --text: #fff; --sub: #999; --primary: #2962ff; --gold: #ffb300; --border: #2a2e39; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 20px; }
+        
+        .header { padding: 15px; border-bottom: 1px solid var(--border); font-size: 18px; font-weight: 700; display: flex; align-items: center; background: var(--bg); }
+        .back-btn { margin-right: 15px; cursor: pointer; color: var(--sub); }
+
+        /* HERO */
+        .reward-hero { padding: 30px 20px; text-align: center; background: linear-gradient(180deg, #1e222d 0%, #131722 100%); }
+        .coin-icon { font-size: 50px; color: var(--gold); margin-bottom: 10px; animation: float 3s ease-in-out infinite; }
+        .my-points { font-size: 32px; font-weight: 800; font-family: monospace; }
+        .pts-label { font-size: 12px; color: var(--sub); text-transform: uppercase; }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+        /* CHECK IN */
+        .checkin-box { background: var(--card); margin: 20px; padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .ci-title { font-size: 14px; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .days-grid { display: flex; justify-content: space-between; gap: 5px; }
+        .day-item { flex: 1; background: #2a2e39; border-radius: 6px; padding: 10px 2px; text-align: center; font-size: 12px; color: var(--sub); opacity: 0.5; transition: 0.3s; }
+        
+        .day-item.checked { background: var(--primary); color: #fff; opacity: 1; }
+        .day-item.today { background: var(--gold); color: #000; opacity: 1; font-weight: 700; transform: scale(1.05); box-shadow: 0 0 10px rgba(255, 179, 0, 0.3); }
+        
+        .day-score { font-weight: 700; display: block; margin-top: 4px; }
+
+        .btn-checkin { width: 100%; background: var(--gold); border: none; padding: 12px; border-radius: 6px; font-weight: 700; color: #000; margin-top: 15px; cursor: pointer; transition: 0.2s; }
+        .btn-checkin:active { transform: scale(0.98); }
+        .btn-checkin:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+
+        /* TASKS */
+        .task-list { padding: 0 20px; }
+        .task-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); }
+        .t-icon { width: 40px; height: 40px; background: rgba(41, 98, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); margin-right: 15px; }
+        .t-info { flex: 1; }
+        .t-title { font-size: 14px; font-weight: 700; }
+        .t-rew { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+        
+        .btn-claim { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; min-width: 70px; }
+        .btn-claim.done { background: rgba(255,255,255,0.05); border-color: transparent; color: #666; cursor: default; }
+
+        /* TOAST */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #222; border: 1px solid #444; color: white; padding: 12px 24px; border-radius: 20px; font-size: 14px; display: none; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-chevron-left back-btn" onclick="window.history.back()"></i>
+        Rewards Hub
+    </div>
+
+    <div class="reward-hero">
+        <i class="fas fa-coins coin-icon"></i>
+        <div class="my-points" id="points-display">0</div>
+        <div class="pts-label">My B-Points</div>
+    </div>
+
+    <div class="checkin-box">
+        <div class="ci-title">
+            <span>Daily Check-in</span>
+            <span style="color:var(--sub); font-weight:400; font-size:12px;">Reset at 00:00 UTC</span>
+        </div>
+        <div class="days-grid" id="days-grid">
+            </div>
+        <button class="btn-checkin" id="btn-ci" onclick="doCheckIn()">Check In Now</button>
+    </div>
+
+    <div class="task-list">
+        <div class="section-title" style="margin-bottom:15px; font-weight:700;">New User Tasks</div>
+        
+        <div class="task-item">
+            <div class="t-icon"><i class="fas fa-user-shield"></i></div>
+            <div class="t-info">
+                <div class="t-title">Complete KYC</div>
+                <div class="t-rew">+500 Points</div>
+            </div>
+            <button class="btn-claim" id="task-kyc" onclick="completeTask('kyc', 500, 'mobile_profile.html')">Go</button>
+        </div>
+
+        <div class="task-item">
+            <div class="t-icon"><i class="fas fa-wallet"></i></div>
+            <div class="t-info">
+                <div class="t-title">First Deposit</div>
+                <div class="t-rew">+1000 Points</div>
+            </div>
+            <button class="btn-claim" id="task-dep" onclick="completeTask('dep', 1000, 'mobile_deposit.html')">Go</button>
+        </div>
+
+        <div class="task-item">
+            <div class="t-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="t-info">
+                <div class="t-title">First Trade</div>
+                <div class="t-rew">+200 Points</div>
+            </div>
+            <button class="btn-claim" id="task-trade" onclick="completeTask('trade', 200, 'mobile_contract.html')">Go</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Success!</div>
+
+    <script>
+        // --- 1. CONFIG & STATE ---
+        const REWARD_CONFIG = [10, 20, 50, 10, 10, 20, 100]; // 7 Days Rewards
+        let points = parseInt(localStorage.getItem('bitx_points')) || 250;
+        let streak = parseInt(localStorage.getItem('bitx_streak')) || 0;
+        let lastCheckIn = localStorage.getItem('bitx_last_checkin');
+        
+        // --- 2. INIT ---
+        window.onload = () => {
+            renderPoints();
+            renderDays();
+            checkTaskStatus();
+        };
+
+        function renderPoints() {
+            document.getElementById('points-display').innerText = points.toLocaleString();
+        }
+
+        // --- 3. CHECK-IN LOGIC ---
+        function renderDays() {
+            const grid = document.getElementById('days-grid');
+            grid.innerHTML = '';
+            
+            const todayStr = new Date().toDateString();
+            const isCheckedInToday = (lastCheckIn === todayStr);
+
+            // Handle Button State
+            const btn = document.getElementById('btn-ci');
+            if (isCheckedInToday) {
+                btn.innerText = "Checked In Today";
+                btn.disabled = true;
+            } else {
+                btn.innerText = `Check In (+${REWARD_CONFIG[streak % 7]})`;
+                btn.disabled = false;
+            }
+
+            // Render Day Circles
+            REWARD_CONFIG.forEach((rew, index) => {
+                let className = 'day-item';
+                
+                // Logic: 
+                // If index < streak => Checked (Past)
+                // If index == streak => Today (Active or Checked)
+                
+                if (index < streak) {
+                    className += ' checked';
+                    // Special case: If we wrap around 7 days, this logic resets visually for simplicity in this demo
+                } else if (index === streak) {
+                    if (isCheckedInToday) className += ' checked';
+                    else className += ' today';
+                }
+
+                grid.innerHTML += `
+                    <div class="${className}">
+                        D${index + 1}
+                        <span class="day-score">+${rew}</span>
+                    </div>`;
+            });
+        }
+
+        function doCheckIn() {
+            const todayStr = new Date().toDateString();
+            const reward = REWARD_CONFIG[streak % 7];
+
+            // Update State
+            points += reward;
+            streak++; // Increment streak
+            
+            // Save to Storage
+            localStorage.setItem('bitx_points', points);
+            localStorage.setItem('bitx_streak', streak);
+            localStorage.setItem('bitx_last_checkin', todayStr);
+
+            // UI Feedback
+            showToast(`Checked In! +${reward} Points`);
+            renderPoints();
+            renderDays();
+        }
+
+        // --- 4. TASK LOGIC ---
+        function checkTaskStatus() {
+            const tasks = ['kyc', 'dep', 'trade'];
+            tasks.forEach(id => {
+                if(localStorage.getItem(`task_${id}_done`)) {
+                    markTaskDone(id);
+                }
+            });
+        }
+
+        function completeTask(taskId, reward, url) {
+            // If already done, do nothing
+            if(localStorage.getItem(`task_${taskId}_done`)) return;
+
+            // 1. Mark as done immediately (Simulation)
+            localStorage.setItem(`task_${taskId}_done`, 'true');
+            
+            // 2. Add Points
+            points += reward;
+            localStorage.setItem('bitx_points', points);
+            
+            // 3. Show Feedback & Redirect
+            markTaskDone(taskId);
+            showToast(`Task Started! +${reward} Points on completion`);
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 1000);
+        }
+
+        function markTaskDone(taskId) {
+            const btn = document.getElementById(`task-${taskId}`);
+            if(btn) {
+                btn.innerText = "Done";
+                btn.className = "btn-claim done";
+                btn.onclick = null; // Remove click event
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+    </script>
+</body>
+</html>

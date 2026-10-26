@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>if(!localStorage.getItem('bitx_user_id')) window.location.href = 'mobile.html';</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | New Listings</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg: #131722; --card: #1e222d; --text: #fff; --sub: #999; --primary: #2962ff; --green: #00c853; --red: #ff4d4d; --border: #2a2e39; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 20px; }
+        .header { padding: 15px; border-bottom: 1px solid var(--border); font-size: 18px; font-weight: 700; display: flex; align-items: center; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+        .back-btn { margin-right: 15px; cursor: pointer; color: var(--sub); }
+        
+        .section-title { padding: 20px 15px 10px; font-size: 16px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        
+        /* LIST ITEM */
+        .coin-item { display: flex; align-items: center; padding: 15px; background: var(--card); margin: 0 15px 10px; border-radius: 8px; border: 1px solid var(--border); transition: transform 0.1s; }
+        .coin-item:active { transform: scale(0.98); }
+        .ci-img { width: 35px; height: 35px; border-radius: 50%; margin-right: 12px; }
+        .ci-info { flex: 1; }
+        .ci-name { font-size: 15px; font-weight: 700; display: block; }
+        .ci-sub { font-size: 12px; color: var(--sub); }
+        
+        .ci-action { text-align: right; }
+        .btn-trade { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 4px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .timer-box { font-family: monospace; color: var(--green); font-weight: 700; font-size: 13px; background: rgba(0,200,83,0.1); padding: 4px 8px; border-radius: 4px; }
+        
+        .price-change { font-size: 13px; font-weight: 700; margin-top: 4px; display: block; }
+        .p-green { color: var(--green); }
+        .p-red { color: var(--red); }
+
+        /* BANNER */
+        .banner { margin: 15px; padding: 20px; background: linear-gradient(135deg, #2962ff, #1e222d); border-radius: 12px; position: relative; overflow: hidden; }
+        .banner h2 { margin: 0 0 5px 0; font-size: 20px; }
+        .banner p { margin: 0; font-size: 12px; opacity: 0.8; }
+        .rocket-icon { position: absolute; right: -10px; bottom: -10px; font-size: 80px; opacity: 0.2; transform: rotate(-20deg); }
+        
+        .loading { text-align: center; color: var(--sub); padding: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-chevron-left back-btn" onclick="window.history.back()"></i>
+        New Coin Zone
+    </div>
+
+    <div class="banner">
+        <h2>Launchpad</h2>
+        <p>Discover trending gems before the market.</p>
+        <i class="fas fa-rocket rocket-icon"></i>
+    </div>
+
+    <div class="section-title"><i class="far fa-clock"></i> Upcoming & Trending</div>
+    <div id="upcoming-list">
+        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Scanning Market...</div>
+    </div>
+
+    <div class="section-title"><i class="fas fa-fire"></i> Hot Listings</div>
+    <div id="listed-list">
+        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading Data...</div>
+    </div>
+
+    <script>
+        // 1. Fetch "Trending" Coins (Simulating Upcoming/Launchpad)
+        async function fetchUpcoming() {
+            try {
+                // Using CoinGecko Trending Search Endpoint
+                const res = await fetch('https://api.coingecko.com/api/v3/search/trending');
+                const data = await res.json();
+                const coins = data.coins.slice(0, 5); // Top 5 Trending
+
+                document.getElementById('upcoming-list').innerHTML = coins.map(item => {
+                    const c = item.item;
+                    // Generate a fake countdown based on coin ID hash to keep it consistent
+                    const randomHours = (c.score + 2); 
+                    const timeStr = `0${randomHours}:14:50`; 
+
+                    return `
+                    <div class="coin-item">
+                        <img src="${c.small}" class="ci-img">
+                        <div class="ci-info">
+                            <span class="ci-name">${c.symbol}</span>
+                            <span class="ci-sub">${c.name}</span>
+                        </div>
+                        <div class="ci-action">
+                            <div class="timer-box">${timeStr}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('upcoming-list').innerHTML = '<div class="loading">Data Unavailable</div>';
+            }
+        }
+
+        // 2. Fetch "Just Listed" (Simulating with High Volume/Gainers)
+        async function fetchListed() {
+            try {
+                // Fetch markets sorted by Volume to find active hot coins
+                const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=volume_desc&per_page=15&page=1&sparkline=false');
+                let coins = await res.json();
+                
+                // Filter for "New Listing" vibe (High volatility or specific IDs)
+                // We pick coins with high percentage change to simulate "New Coin" volatility
+                coins = coins.sort((a, b) => Math.abs(b.price_change_percentage_24h) - Math.abs(a.price_change_percentage_24h)).slice(0, 5);
+
+                document.getElementById('listed-list').innerHTML = coins.map(c => {
+                    const isPos = c.price_change_percentage_24h >= 0;
+                    const sign = isPos ? '+' : '';
+                    const color = isPos ? 'p-green' : 'p-red';
+
+                    return `
+                    <div class="coin-item" onclick="window.location.href='mobile_contract.html'">
+                        <img src="${c.image}" class="ci-img">
+                        <div class="ci-info">
+                            <span class="ci-name">${c.symbol.toUpperCase()}</span>
+                            <span class="ci-sub">${c.name}</span>
+                        </div>
+                        <div class="ci-action">
+                            <span class="ci-name">$${c.current_price.toLocaleString()}</span>
+                            <span class="price-change ${color}">${sign}${c.price_change_percentage_24h.toFixed(2)}%</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('listed-list').innerHTML = '<div class="loading">Data Unavailable</div>';
+            }
+        }
+
+        // Init
+        fetchUpcoming();
+        fetchListed();
+    </script>
+</body>
+</html>

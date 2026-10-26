@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | History</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* DARK THEME MATCHING YOUR ASSETS PAGE */
+        :root { 
+            --bg: #131722; 
+            --card: #1e222d; 
+            --text: #fff; 
+            --sub: #999; 
+            --green: #00c853; 
+            --red: #ff3d00; 
+            --blue: #2962ff; 
+            --orange: #ff9800; 
+            --border: #2a2e39; 
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 70px; }
+        
+        /* HEADER */
+        .header { padding: 15px; border-bottom: 1px solid var(--border); font-size: 18px; font-weight: 700; text-align: center; position: sticky; top: 0; background: var(--bg); z-index: 10; }
+        .back-btn { position: absolute; left: 15px; cursor: pointer; color: var(--sub); }
+
+        /* TABS */
+        .tabs { display: flex; overflow-x: auto; padding: 15px; gap: 10px; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+        .tab { padding: 8px 16px; background: var(--card); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--sub); white-space: nowrap; cursor: pointer; }
+        .tab.active { background: var(--blue); color: white; }
+
+        /* LIST */
+        .list-container { padding: 15px; }
+        .txn-card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        
+        .txn-left { display: flex; gap: 12px; align-items: center; }
+        .txn-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        
+        /* Icon Colors */
+        .icon-deposit { background: rgba(0, 200, 83, 0.1); color: var(--green); }
+        .icon-withdraw { background: rgba(255, 61, 0, 0.1); color: var(--red); }
+        .icon-trade { background: rgba(41, 98, 255, 0.1); color: var(--blue); }
+        .icon-pending { background: rgba(255, 152, 0, 0.1); color: var(--orange); }
+        .icon-unknown { background: rgba(153, 153, 153, 0.1); color: #999; }
+
+        .txn-info h4 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; }
+        .txn-info p { margin: 0; font-size: 11px; color: var(--sub); }
+
+        .txn-right { text-align: right; }
+        .txn-amount { font-size: 15px; font-weight: 700; display: block; margin-bottom: 4px; }
+        .amt-pos { color: var(--green); }
+        .amt-neg { color: var(--red); }
+        
+        /* Status Badges */
+        .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+        .st-success { background: rgba(0, 200, 83, 0.2); color: var(--green); }
+        .st-pending { background: rgba(255, 152, 0, 0.2); color: var(--orange); }
+        .st-rejected { background: rgba(255, 61, 0, 0.2); color: var(--red); }
+        .st-win { background: rgba(0, 200, 83, 0.2); color: var(--green); }
+        .st-loss { background: rgba(255, 61, 0, 0.2); color: var(--red); }
+
+        .empty-msg { text-align: center; color: var(--sub); margin-top: 50px; font-size: 14px; }
+
+        /* FOOTER NAV */
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); height: 60px; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+        .nav-item { text-align: center; color: var(--sub); font-size: 10px; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--blue); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-chevron-left back-btn" onclick="window.location.href='mobile_assets.html'"></i>
+        Transaction History
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="filterType('all', this)">All</div>
+        <div class="tab" onclick="filterType('deposit', this)">Deposit</div>
+        <div class="tab" onclick="filterType('withdraw', this)">Withdraw</div>
+        <div class="tab" onclick="filterType('trade', this)">Trading</div>
+        <div class="tab" onclick="filterType('spot', this)">Exchange</div>
+    </div>
+
+    <div class="list-container" id="history-list">
+        <div class="empty-msg">Loading history...</div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item" onclick="window.location.href='mobile.html'"><i class="fas fa-home"></i> Home</div>
+        <div class="nav-item" onclick="window.location.href='mobile_market.html'"><i class="fas fa-chart-line"></i> Markets</div>
+        <div class="nav-item" onclick="window.location.href='mobile_exchange.html'"><i class="fas fa-exchange-alt"></i> Trade</div>
+        <div class="nav-item active" onclick="window.location.href='mobile_assets.html'"><i class="fas fa-wallet"></i> Assets</div>
+        <div class="nav-item" onclick="window.location.href='mobile_profile.html'"><i class="fas fa-user"></i> Me</div>
+    </div>
+
+    <script>
+    const API_URL = '/api';
+    let allTxns = [];
+
+    window.onload = () => {
+        // 1. Load Cached Data Immediately (Instant Feel)
+        const cached = localStorage.getItem('bitx_history_cache');
+        if (cached) {
+            try {
+                allTxns = JSON.parse(cached);
+                renderList(allTxns);
+            } catch(e) { console.log("Cache invalid"); }
+        }
+        
+        // 2. Fetch Fresh Data (With timestamp to break cache)
+        loadHistory();
+    };
+
+    async function loadHistory() {
+        const userId = localStorage.getItem('bitx_user_id');
+        if(!userId) return window.location.href = 'login.html';
+
+        try {
+            // 🔥 FIXED: Added timestamp `?t=` to prevent caching
+            const res = await fetch(`${API_URL}/history/${userId}?t=${new Date().getTime()}`);
+            const newData = await res.json();
+            
+            // Render if new data exists
+            if (JSON.stringify(newData) !== JSON.stringify(allTxns)) {
+                allTxns = newData;
+                localStorage.setItem('bitx_history_cache', JSON.stringify(allTxns)); 
+                renderList(allTxns);
+            }
+        } catch(e) {
+            console.error(e);
+            if(allTxns.length === 0) {
+                document.getElementById('history-list').innerHTML = '<div class="empty-msg">Failed to load history</div>';
+            }
+        }
+    }
+
+    function renderList(data) {
+        const container = document.getElementById('history-list');
+        
+        if(!data || data.length === 0) {
+            container.innerHTML = '<div class="empty-msg">No transactions found</div>';
+            return;
+        }
+
+        const listHTML = data.map(txn => {
+            // 🔥 FIXED: Handle missing types to prevent crashing
+            const type = txn.type ? txn.type.toLowerCase() : 'unknown';
+            const status = txn.status ? txn.status.toLowerCase() : 'pending';
+            const amount = parseFloat(txn.amount || 0);
+
+            let iconClass = 'icon-trade';
+            let iconSymbol = 'fa-exchange-alt';
+            let amtClass = 'amt-pos';
+            let amtPrefix = '+';
+            let statusClass = 'st-success';
+            let title = type.toUpperCase();
+
+            // LOGIC TO DETERMINE STYLES
+            if (type === 'deposit') {
+                iconClass = 'icon-deposit';
+                iconSymbol = 'fa-arrow-down';
+                title = `Deposit ${txn.coin || ''}`;
+                if(status === 'pending') statusClass = 'st-pending';
+                else if(status === 'rejected') { statusClass = 'st-rejected'; amtClass = 'amt-neg'; }
+                else statusClass = 'st-success';
+            } 
+            else if (type === 'withdraw') {
+                iconClass = status === 'pending' ? 'icon-pending' : 'icon-withdraw';
+                iconSymbol = 'fa-arrow-up';
+                amtClass = 'amt-neg';
+                amtPrefix = '-';
+                title = `Withdraw ${txn.coin || ''}`;
+                if(status === 'pending') statusClass = 'st-pending';
+                else if(status === 'rejected') statusClass = 'st-rejected';
+                else statusClass = 'st-success';
+            }
+            else if (type === 'trade') {
+                if(status === 'win') {
+                    iconClass = 'icon-deposit';
+                    iconSymbol = 'fa-trophy';
+                    title = 'Trade Profit';
+                    statusClass = 'st-win';
+                    amtPrefix = '+';
+                } else {
+                    iconClass = 'icon-withdraw';
+                    iconSymbol = 'fa-times';
+                    amtClass = 'amt-neg';
+                    amtPrefix = '-';
+                    title = 'Trade Loss';
+                    statusClass = 'st-loss';
+                }
+            }
+            else if (type === 'spot') {
+                iconClass = 'icon-trade';
+                iconSymbol = 'fa-sync-alt';
+                amtClass = 'amt-neg'; 
+                amtPrefix = '';
+                title = txn.description || 'Spot Exchange';
+                statusClass = 'st-success';
+            }
+            else {
+                // Handle unknown/ghost types safely
+                iconClass = 'icon-unknown';
+                iconSymbol = 'fa-question';
+                title = 'Unknown Transaction';
+                statusClass = 'st-pending';
+            }
+
+            const dateObj = new Date(txn.date);
+            const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            return `
+            <div class="txn-card">
+                <div class="txn-left">
+                    <div class="txn-icon ${iconClass}"><i class="fas ${iconSymbol}"></i></div>
+                    <div class="txn-info">
+                        <h4>${title}</h4>
+                        <p>${dateStr}</p>
+                    </div>
+                </div>
+                <div class="txn-right">
+                    <span class="txn-amount ${amtClass}">${amtPrefix}${amount.toFixed(4)} ${txn.coin || 'USDT'}</span>
+                    <span class="status-badge ${statusClass}">${status.toUpperCase()}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        container.innerHTML = listHTML;
+    }
+
+    function filterType(type, el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+
+        if(type === 'all') {
+            renderList(allTxns);
+        } else {
+            // Safe filter that checks if type exists
+            const filtered = allTxns.filter(t => t.type && t.type.toLowerCase() === type);
+            renderList(filtered);
+        }
+    }
+</script>
+</body>
+</html>

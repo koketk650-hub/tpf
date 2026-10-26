@@ -1,0 +1,499 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Assets</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- ASSET STYLES (DARK & YELLOW THEME) --- */
+        :root { 
+            --bg-mobile: #0b0e11; 
+            --bg-panel: #181a20; 
+            --bg-hover: #2b3139; 
+            --primary-yellow: #f3ba2f; 
+            --icon-gray: #848e9c;
+            --text-light: #eaecef;
+            --text-muted: #848e9c;
+            --success-green: #0ecb81;
+            --danger-red: #f6465d;
+            --border-dark: #2b3139;
+        }
+        body { 
+            background-color: var(--bg-mobile); 
+            color: var(--text-light); 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            padding-bottom: 70px; 
+            margin: 0; 
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+        
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; }
+
+        /* HEADER & NOTIFICATIONS */
+        .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--bg-panel); border-bottom: 1px solid var(--border-dark); position: sticky; top: 0; z-index: 100; }
+        .page-title { font-size: 18px; font-weight: 700; color: var(--text-light); }
+        .header-actions { display: flex; gap: 18px; align-items: center; }
+
+        .notification-wrapper { position: relative; cursor: pointer; color: var(--text-light); font-size: 20px; display: flex; align-items: center; }
+        .nav-badge { position: absolute; top: -5px; right: -5px; background: var(--danger-red); color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; display: none; }
+        
+        .notification-dropdown { position: absolute; top: 45px; right: -5px; width: 280px; background: var(--bg-panel); border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1000; border: 1px solid var(--border-dark); }
+        .nd-header { padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-dark); color: var(--text-light); }
+        .nd-list { max-height: 300px; overflow-y: auto; }
+        .nd-item { padding: 15px; border-bottom: 1px solid var(--border-dark); }
+        .nd-item.unread { border-left: 3px solid var(--primary-yellow); background: rgba(243, 186, 47, 0.05); }
+        .nd-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--text-light); }
+        .nd-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .nd-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        /* ASSET HEADER CARD */
+        .asset-header { padding: 20px; background: var(--bg-panel); border-bottom: 1px solid var(--border-dark); }
+        
+        .header-top-row { display: flex; align-items: center; justify-content: space-between; }
+        .total-label { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        
+        /* Custom Select */
+        .currency-select {
+            background: transparent; border: none; color: var(--text-light); font-size: 13px; 
+            font-weight: 600; outline: none; cursor: pointer; text-align: right;
+        }
+        .currency-select option { background: var(--bg-panel); color: var(--text-light); }
+
+        .total-amount { font-size: 32px; font-weight: 700; margin: 10px 0; letter-spacing: 0.5px; color: var(--text-light); }
+        .btc-equiv { font-size: 14px; color: var(--text-muted); }
+
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .act-btn { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: var(--bg-hover); padding: 12px 5px; border-radius: 12px; 
+            cursor: pointer; text-decoration: none; color: inherit; transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .act-btn:active { background: rgba(243, 186, 47, 0.1); border: 1px solid rgba(243, 186, 47, 0.3); transform: scale(0.98); }
+        .act-btn i { font-size: 20px; margin-bottom: 8px; color: var(--primary-yellow); }
+        .act-btn span { font-size: 11px; font-weight: 600; color: var(--text-light); }
+
+        /* ASSET LIST */
+        .asset-list { padding: 10px 15px; }
+        .list-options { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px; color: var(--text-muted); }
+        
+        .asset-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 16px 0; border-bottom: 1px solid var(--border-dark); 
+        }
+        .ar-left { display: flex; align-items: center; gap: 12px; }
+        .ar-icon { width: 36px; height: 36px; border-radius: 50%; }
+        .ar-name h4 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-light); }
+        .ar-name span { font-size: 12px; color: var(--text-muted); }
+        .ar-right { text-align: right; }
+        .ar-amount { font-size: 16px; font-weight: 600; display: block; color: var(--text-light); }
+        .ar-fiat { font-size: 12px; color: var(--text-muted); }
+
+        /* BOTTOM NAV */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; 
+            background: var(--bg-panel); border-top: 1px solid var(--border-dark); z-index: 1000;
+            display: flex; justify-content: space-between; padding: 0 10px; padding-bottom: env(safe-area-inset-bottom);
+        }
+        .b-nav-item { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted); text-decoration: none; font-size: 11px; font-weight: 500; cursor: pointer;
+            transition: color 0.3s;
+        }
+        .b-nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .b-nav-item.active { color: var(--primary-yellow); }
+
+        /* TOAST NOTIFICATION STYLE */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-panel); color: var(--text-light); padding: 12px 24px;
+            border-radius: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
+            z-index: 3000; display: flex; align-items: center; gap: 10px;
+            opacity: 0; transition: opacity 0.3s, top 0.3s; pointer-events: none;
+            font-size: 14px; font-weight: 500; border: 1px solid var(--border-dark);
+        }
+        .toast.show { opacity: 1; top: 30px; }
+        .toast i { font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <div class="mobile-header">
+        <div class="page-title">Assets</div>
+        <div class="header-actions">
+            <div class="notification-wrapper" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                <div class="nav-badge" id="nav-badge">0</div>
+                
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <div class="nd-header">Notifications</div>
+                    <div id="notification-list" class="nd-list">
+                        <div class="nd-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="asset-header animate-up">
+        <div class="header-top-row">
+            <div class="total-label">
+                Total Assets <i class="fas fa-eye" id="eye-icon" onclick="toggleTotalBalance()" style="cursor: pointer; margin-left: 8px;"></i>
+            </div>
+            <select class="currency-select" id="base-currency" onchange="updateTotalDisplay()">
+                <option value="USDT">USDT</option>
+                <option value="BTC">BTC</option>
+                <option value="ETH">ETH</option>
+                <option value="BNB">BNB</option>
+                <option value="XRP">XRP</option>
+            </select>
+        </div>
+
+        <div class="total-amount" id="total-amount-display">0.00</div>
+        <div class="btc-equiv" id="equiv-display">≈ $0.00</div>
+
+        <div class="action-grid">
+            <a href="mobile_deposit.html" class="act-btn"><i class="fas fa-arrow-down"></i><span>Deposit</span></a>
+            <a href="mobile_withdraw.html" class="act-btn"><i class="fas fa-arrow-up"></i><span>Withdraw</span></a>
+            <a href="mobile_transfer.html" class="act-btn"><i class="fas fa-exchange-alt"></i><span>Transfer</span></a>
+            <a href="mobile_history.html" class="act-btn"><i class="fas fa-history"></i><span>History</span></a>
+        </div>
+    </div>
+
+    <div class="asset-list animate-up" style="animation-delay: 0.1s;">
+        <div class="list-options">
+            <label style="display:flex; align-items:center; gap:5px; cursor: pointer;">
+                <input type="checkbox" id="hide-zero-check" onchange="toggleZeroBalances()" style="accent-color: var(--primary-yellow);"> Hide 0 balances
+            </label>
+            <i class="fas fa-search" style="color: var(--text-muted);"></i>
+        </div>
+
+        <div id="asset-list-container">
+            <div style="text-align:center; padding:20px; color:var(--text-muted);">Loading Assets...</div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="mobile.html" class="b-nav-item"><i class="fas fa-home"></i>Home</a>
+        <a href="mobile_market.html" class="b-nav-item"><i class="fas fa-chart-bar"></i>Markets</a>
+        <a href="mobile_exchange.html" class="b-nav-item"><i class="fas fa-exchange-alt"></i>Trade</a>
+        <a href="mobile_contract.html" class="b-nav-item"><i class="fas fa-file-contract"></i>Contracts</a>
+        <a href="mobile_assets.html" class="b-nav-item active"><i class="fas fa-wallet"></i>Balance</a>
+    </div>
+
+    <script>
+        // --- TOAST HELPER ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const icon = toast.querySelector('i');
+
+            toastMsg.innerText = msg;
+            if(isError) {
+                icon.className = 'fas fa-exclamation-circle';
+                icon.style.color = 'var(--danger-red)';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = 'var(--success-green)';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- AUTH CHECK ---
+        const userId = localStorage.getItem('bitx_user_id');
+        if (!userId) {
+            setTimeout(() => {
+                showToast("Please Login to view assets", true);
+                setTimeout(() => window.location.href = 'login.html', 1500);
+            }, 500);
+        }
+
+        // --- NOTIFICATION LOGIC ---
+        async function fetchNotifications() {
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/notifications/${userId}`); 
+                if (!response.ok) return;
+                const notifications = await response.json();
+                
+                const badge = document.getElementById('nav-badge');
+                const list = document.getElementById('notification-list');
+                
+                const unread = notifications.filter(n => !n.isRead);
+                
+                if (unread.length > 0) {
+                    badge.innerText = unread.length;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="nd-empty">No new notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = notifications.map(n => `
+                    <div class="nd-item ${n.isRead ? '' : 'unread'}">
+                        <div class="nd-title">${n.title}</div>
+                        <div class="nd-msg">${n.message}</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">
+                            ${new Date(n.createdAt).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("Failed to load notifications:", error);
+            }
+        }
+
+        async function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            const isShowing = dropdown.style.display === 'flex';
+            
+            if (isShowing) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'flex';
+                if (userId) {
+                    fetch(`/api/notifications/${userId}/read`, { method: 'POST' })
+                        .then(() => fetchNotifications()); 
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notification-dropdown').style.display = 'none';
+            }
+        });
+
+        // --- ICON MAPPER ---
+        function getIcon(symbol) {
+            const icons = {
+                'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+                'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+                'BNB': 'https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png',
+                'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+                'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+                'USDC': 'https://assets.coingecko.com/coins/images/6319/small/usdc.png',
+                'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+                'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+                'TRX': 'https://assets.coingecko.com/coins/images/1094/small/tron-logo.png',
+                'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+                'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+                'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+                'SHIB': 'https://assets.coingecko.com/coins/images/11939/small/shiba.png'
+            };
+            return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+        }
+
+        // --- STATE ---
+        let userBalances = {};
+        let marketPrices = {}; 
+        let totalValUSDT = 0;
+        let isBalanceHidden = false;
+
+        async function fetchAssets() {
+            if(!userId) return;
+            try {
+                // 1. GET USER BALANCE
+                const userRes = await fetch(`/api/user/${userId}`);
+                if (!userRes.ok) throw new Error("Failed to fetch user");
+                const userData = await userRes.json();
+
+                if (userData.balance) {
+                    userBalances = {
+                        'USDT': userData.balance.usdt || 0,
+                        'BTC': userData.balance.btc || 0,
+                        'ETH': userData.balance.eth || 0,
+                        'BNB': userData.balance.bnb || 0,
+                        'SOL': userData.balance.sol || 0,
+                        'XRP': userData.balance.xrp || 0,
+                        'USDC': userData.balance.usdc || 0,
+                        'ADA': userData.balance.ada || 0,
+                        'DOGE': userData.balance.doge || 0,
+                        'TRX': userData.balance.trx || 0,
+                        'AVAX': userData.balance.avax || 0,
+                        'SHIB': userData.balance.shib || 0,
+                        'DOT': userData.balance.dot || 0,
+                        'LTC': userData.balance.ltc || 0
+                    };
+                }
+
+                // 2. GET MARKET PRICES
+                const priceRes = await fetch('/api/market-data');
+                if (!priceRes.ok) throw new Error("Market API Error");
+                
+                const priceData = await priceRes.json();
+                
+                // Store prices
+                marketPrices['USDT'] = 1.0; 
+                const cleanCoins = priceData.map(item => {
+                    let symbol = item.symbol.replace('USDT', '');
+                    let price = parseFloat(item.price);
+                    marketPrices[symbol] = price; 
+                    
+                    return {
+                        symbol: symbol,
+                        current_price: price,
+                        image: getIcon(symbol)
+                    };
+                });
+                
+                calculateTotalValue(cleanCoins);
+                renderAssetList(cleanCoins);
+
+            } catch (e) {
+                console.error("Asset Error", e);
+                document.getElementById('asset-list-container').innerHTML = 
+                    `<div style="text-align:center; padding:20px; color:var(--danger-red);">Connection Failed</div>`;
+                showToast("Failed to load assets", true);
+            }
+        }
+        
+        function calculateTotalValue(coins) {
+            let total = userBalances['USDT'] || 0;
+            coins.forEach(coin => {
+                const sym = coin.symbol;
+                if (sym === 'USDT') return;
+                const balance = userBalances[sym] || 0;
+                total += balance * coin.current_price;
+            });
+            totalValUSDT = total;
+            updateTotalDisplay();
+        }
+
+        function updateTotalDisplay() {
+            if (isBalanceHidden) {
+                document.getElementById('total-amount-display').innerText = "******";
+                document.getElementById('equiv-display').innerText = "******";
+                return;
+            }
+
+            const selectedCurrency = document.getElementById('base-currency').value;
+            const rate = marketPrices[selectedCurrency] || 1;
+            
+            // Convert Total USDT Value to Selected Currency
+            const convertedTotal = totalValUSDT / rate;
+            
+            let displayTotal = "";
+            let equivText = "";
+
+            if(selectedCurrency === 'USDT') {
+                displayTotal = convertedTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                equivText = `≈ $${displayTotal}`;
+            } else {
+                displayTotal = convertedTotal.toFixed(8);
+                equivText = `≈ $${totalValUSDT.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+
+            document.getElementById('total-amount-display').innerText = displayTotal;
+            document.getElementById('equiv-display').innerText = equivText;
+        }
+
+        function renderAssetList(coins) {
+            const container = document.getElementById('asset-list-container');
+            let html = '';
+            
+            // Add USDT manually
+            const usdtBal = userBalances['USDT'] || 0;
+            const usdtVal = usdtBal * 1.00;
+            html += createAssetRow('USDT', 'Tether', usdtBal, usdtVal, getIcon('USDT'));
+
+            coins.forEach(coin => {
+                const sym = coin.symbol;
+                if (sym === 'USDT') return;
+
+                const balance = userBalances[sym] || 0;
+                const value = balance * coin.current_price;
+                
+                html += createAssetRow(sym, sym, balance, value, coin.image);
+            });
+            container.innerHTML = html;
+            
+            toggleZeroBalances();
+            if(isBalanceHidden) applyMaskToRows(true);
+        }
+
+        function createAssetRow(sym, name, balance, value, img) {
+            const rowClass = balance === 0 ? 'asset-row zero-balance' : 'asset-row';
+            const displayBal = balance < 0.000001 ? "0.00" : balance.toFixed(6);
+            
+            return `
+            <div class="${rowClass}">
+                <div class="ar-left">
+                    <img src="${img}" class="ar-icon" alt="${sym}">
+                    <div class="ar-name"><h4>${sym}</h4><span>${name}</span></div>
+                </div>
+                <div class="ar-right">
+                    <span class="ar-amount asset-val-hidden">${displayBal}</span>
+                    <span class="ar-fiat asset-val-hidden">≈ $${value.toFixed(2)}</span>
+                </div>
+            </div>`;
+        }
+
+        function toggleTotalBalance() {
+            isBalanceHidden = !isBalanceHidden;
+            const eye = document.getElementById('eye-icon');
+            
+            if (isBalanceHidden) {
+                eye.className = "fas fa-eye-slash";
+                document.getElementById('total-amount-display').innerText = "******";
+                document.getElementById('equiv-display').innerText = "******";
+                applyMaskToRows(true);
+            } else {
+                eye.className = "fas fa-eye";
+                updateTotalDisplay();
+                applyMaskToRows(false);
+            }
+        }
+
+        function applyMaskToRows(hide) {
+            const amounts = document.querySelectorAll('.ar-amount');
+            const fiats = document.querySelectorAll('.ar-fiat');
+            
+            if(hide) {
+                amounts.forEach(el => el.innerText = "*****");
+                fiats.forEach(el => el.innerText = "*****");
+            } else {
+                fetchAssets();
+            }
+        }
+
+        function toggleZeroBalances() {
+            const checkBox = document.getElementById('hide-zero-check');
+            const zeroRows = document.querySelectorAll('.zero-balance');
+            zeroRows.forEach(row => row.style.display = checkBox.checked ? 'none' : 'flex');
+        }
+
+        // Start
+        window.onload = () => {
+            fetchNotifications();
+            setInterval(fetchNotifications, 15000);
+            fetchAssets();
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitxEX | Support</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg: #131722; --card: #1e222d; --text: #fff; --sub: #999; --primary: #2962ff; --border: #2a2e39; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .header { padding: 15px; border-bottom: 1px solid var(--border); font-size: 18px; font-weight: 700; text-align: center; position: relative; }
+        .back-btn { position: absolute; left: 15px; cursor: pointer; color: var(--sub); }
+        
+        .container { padding: 20px; }
+        .faq-item { background: var(--card); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+        .faq-head { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .faq-body { padding: 0 15px 15px; font-size: 13px; color: var(--sub); line-height: 1.5; display: none; border-top: 1px solid var(--border); }
+        .faq-item.active .faq-body { display: block; }
+        
+        .contact-btn { position: fixed; bottom: 20px; left: 20px; right: 20px; background: var(--primary); color: white; text-align: center; padding: 15px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <i class="fas fa-chevron-left back-btn" onclick="window.location.href='mobile_profile.html'"></i>
+        Help Center
+    </div>
+
+    <div class="container">
+        <div class="faq-item" onclick="this.classList.toggle('active')">
+            <div class="faq-head">How to Deposit? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-body">Go to Assets > Deposit. Select your coin (e.g. USDT) and network (TRC20). Copy the address or scan the QR code to send funds.</div>
+        </div>
+        <div class="faq-item" onclick="this.classList.toggle('active')">
+            <div class="faq-head">Withdrawal Processing Time? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-body">Withdrawals are usually processed within 30 minutes to 24 hours depending on network congestion and security checks.</div>
+        </div>
+        <div class="faq-item" onclick="this.classList.toggle('active')">
+            <div class="faq-head">How to Complete KYC? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-body">Go to Profile > Identity Verification. Upload photos of your ID card front and back. Approval typically takes less than 24 hours.</div>
+        </div>
+    </div>
+
+    <a href="mobile_livesupport.html" class="contact-btn">Contact Customer Service</a>
+</body>
+</html>

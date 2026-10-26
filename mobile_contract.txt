@@ -1,0 +1,552 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>if(!localStorage.getItem('bitx_user_id') && !localStorage.getItem('user_id')) window.location.href = 'mobile.html';</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Contracts</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        /* --- DARK & YELLOW THEME VARIABLES --- */
+        :root { 
+            --bg-dark: #0b0e11; 
+            --bg-darker: #05070a; 
+            --bg-card: #181a20; 
+            --bg-hover: #2b3139;
+            --text-light: #eaecef; 
+            --text-muted: #848e9c; 
+            --primary-yellow: #f3ba2f; 
+            --success-green: #0ecb81; 
+            --danger-red: #f6465d; 
+            --border-color: #2b3139;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: var(--text-light); padding-bottom: 140px; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        a { text-decoration: none; color: inherit; }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; }
+
+        /* --- FIXED HEADER NAVIGATION (SOLID & OVERRIDING LAYER) --- */
+        .top-nav { 
+            position: sticky; 
+            top: 0; 
+            z-index: 9999 !important; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 20px; 
+            background: var(--bg-card) !important; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+        .nav-pill { display: flex; background: var(--bg-darker); border-radius: 20px; padding: 3px; }
+        .nav-item { padding: 6px 20px; font-size: 13px; font-weight: 600; color: var(--text-muted); border-radius: 18px; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { background: var(--bg-hover); color: var(--primary-yellow); }
+
+        .notification-wrapper { position: relative; cursor: pointer; color: var(--text-light); font-size: 20px; display: flex; align-items: center; }
+        .nav-badge { position: absolute; top: -5px; right: -5px; background: var(--danger-red); color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; display: none; }
+        .notification-dropdown { position: absolute; top: 45px; right: 0px; width: 280px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 10000; border: 1px solid var(--border-color); }
+        .nd-header { padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-light); }
+        .nd-list { max-height: 300px; overflow-y: auto; }
+        .nd-item { padding: 15px; border-bottom: 1px solid var(--border-color); text-align: left;}
+        .nd-item.unread { border-left: 3px solid var(--primary-yellow); background: rgba(243, 186, 47, 0.05); }
+        .nd-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--text-light); }
+        .nd-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .nd-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        .contract-header { background: var(--bg-dark); padding-bottom: 10px; flex-shrink: 0; }
+        .title-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; cursor: pointer; }
+        .tb-title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+        
+        .price-stats { display: flex; justify-content: space-between; padding: 0 15px; }
+        .main-price { font-size: 28px; font-weight: 700; color: var(--success-green); display: block; }
+        .price-change { font-size: 14px; color: var(--success-green); font-weight: 600; }
+        .ps-right { text-align: right; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+        .ps-right span { color: var(--text-light); font-weight: 600; margin-left: 8px; }
+
+        /* --- CHART --- */
+        .chart-container { background: var(--bg-dark); flex-shrink: 0; }
+        .time-frames { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted); }
+        .tf-item { cursor: pointer; transition: 0.2s; padding-bottom: 5px; }
+        .tf-item.active { color: var(--primary-yellow); font-weight: 600; border-bottom: 2px solid var(--primary-yellow); }
+        #tv_chart_container { height: 320px; width: 100%; border-bottom: 1px solid var(--border-color); }
+
+        /* --- ORDER SECTION --- */
+        .order-section { flex: 1; background: var(--bg-dark); padding: 15px; display: flex; flex-direction: column; min-height: 300px; }
+        .order-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; flex-shrink: 0; }
+        .ot-item { flex: 1; text-align: center; padding: 12px 0; font-size: 15px; color: var(--text-muted); cursor: pointer; position: relative; transition: 0.2s; }
+        .ot-item.active { color: var(--text-light); font-weight: 600; }
+        .ot-item.active::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--primary-yellow); border-radius: 2px; }
+        
+        .sub-view { display: none; flex-direction: column; flex: 1; height: 100%; }
+        .sub-view.active { display: flex; }
+
+        /* SIMULATION GRIDS */
+        .ob-header, .deal-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        .deal-header { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .ob-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; padding: 4px 0;}
+        .deal-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 13px; font-weight: 500; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+        .text-green { color: var(--success-green); } .text-red { color: var(--danger-red); }
+        
+        /* INFO */
+        .info-content { font-size: 13px; line-height: 1.6; color: var(--text-light); overflow-y: auto; max-height: 300px; }
+        .info-row { display: flex; justify-content: space-between; font-size: 13px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 15px; }
+
+        /* --- FIXED ACTION BUTTONS (SOLID LAYER) --- */
+        .action-buttons { position: fixed; bottom: 65px; left: 0; width: 100%; display: flex; gap: 15px; padding: 10px 15px; background: var(--bg-card) !important; border-top: 1px solid var(--border-color); z-index: 9990 !important; }
+        .btn-action { flex: 1; padding: 14px; border: none; border-radius: 4px; font-size: 16px; font-weight: 700; color: white; cursor: pointer; text-align: center; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-action:active { transform: scale(0.98); }
+        .btn-bullish { background: var(--success-green); } .btn-bearish { background: var(--danger-red); }
+        
+        /* COIN MENU OVERLAY */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99998; display: none; backdrop-filter: blur(2px); }
+        .bottom-menu { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; max-height: 70%; overflow-y: auto; z-index: 99999; transform: translateY(100%); transition: 0.3s; color: var(--text-light); border-top: 1px solid var(--border-color); }
+        .bottom-menu.active { transform: translateY(0); }
+        .bm-header { text-align:center; font-weight:700; margin-bottom:15px; font-size:18px; color:var(--primary-yellow); }
+        .bm-item { display: flex; align-items: center; padding: 15px 10px; border-bottom: 1px solid var(--border-color); cursor: pointer; border-radius: 8px; transition: 0.2s;}
+        .bm-item:active { background: var(--bg-hover); }
+        .bm-icon { width: 24px; height: 24px; margin-right: 15px; border-radius: 50%; }
+        .bm-name { font-size: 15px; font-weight: 600; flex: 1; }
+        
+        /* --- FIXED BOTTOM NAV (SOLID LAYER) --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: var(--bg-card) !important; border-top: 1px solid var(--border-color); z-index: 9999 !important; display: flex; justify-content: space-between; padding: 0 10px; padding-bottom: env(safe-area-inset-bottom); }
+        .b-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-decoration: none; font-size: 11px; font-weight: 500; transition: color 0.3s; }
+        .b-nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .b-nav-item.active { color: var(--primary-yellow); }
+        
+        /* LOAD MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100000; display: none; align-items: center; justify-content: center; }
+        .modal-box { background: var(--bg-card); padding: 25px; border-radius: 16px; text-align: center; width: 80%; max-width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <i class="fas fa-bars" style="color: var(--text-muted); font-size: 18px;" onclick="window.location.href='mobile_profile.html'"></i>
+        <div class="nav-pill">
+            <div class="nav-item active">Contracts</div>
+            <div class="nav-item" onclick="window.location.href='mobile_exchange.html'">Exchange</div>
+        </div>
+        
+        <div class="notification-wrapper" onclick="toggleNotifications()">
+            <i class="fas fa-bell"></i>
+            <div class="nav-badge" id="nav-badge">0</div>
+            
+            <div class="notification-dropdown" id="notification-dropdown">
+                <div class="nd-header">Notifications</div>
+                <div id="notification-list" class="nd-list">
+                    <div class="nd-empty">No new notifications</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="contract-header animate-up">
+        <div class="title-bar" onclick="toggleMenu(true)">
+            <i class="fas fa-list tb-icon" style="font-size:20px; color:var(--text-muted);"></i>
+            <span class="tb-title" id="pair-title">BTC/USDT <i class="fas fa-caret-down tb-arrow" style="font-size:12px; color:var(--text-muted);"></i></span>
+            <i class="far fa-list-alt tb-icon" style="font-size:20px; color:var(--text-muted);"></i>
+        </div>
+
+        <div class="price-stats">
+            <div class="ps-left">
+                <span class="main-price" id="main-price">Loading...</span>
+                <span class="price-change" id="price-change">0.00%</span>
+            </div>
+            <div class="ps-right">
+                <div>H <span id="stat-h">--</span></div>
+                <div>L <span id="stat-l">--</span></div>
+                <div>24H <span>377M</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container chart-tv animate-up" style="animation-delay: 0.05s;">
+        <div class="time-frames">
+            <div class="tf-item active" onclick="switchTimeframe('1', this)">1m</div>
+            <div class="tf-item" onclick="switchTimeframe('15', this)">15m</div>
+            <div class="tf-item" onclick="switchTimeframe('60', this)">1H</div>
+            <div class="tf-item" onclick="switchTimeframe('D', this)">1D</div>
+            <div class="tf-item" onclick="switchTimeframe('W', this)">1W</div>
+        </div>
+        <div id="tv_chart_container"></div>
+    </div>
+
+    <div class="order-section animate-up" style="animation-delay: 0.1s;">
+        <div class="order-tabs">
+            <div class="ot-item active" onclick="switchSubTab('order', this)">Order</div>
+            <div class="ot-item" onclick="switchSubTab('deal', this)">Deal</div>
+            <div class="ot-item" onclick="switchSubTab('info', this)">Info</div>
+        </div>
+
+        <div id="view-order" class="sub-view active order-book-grid">
+            <div class="ob-header"><span style="flex:1">Qty</span><span style="flex:1; text-align:center">Price</span><span style="flex:1; text-align:right">Qty</span></div>
+            <div id="ob-container"></div>
+        </div>
+
+        <div id="view-deal" class="sub-view">
+            <div class="deal-header"><span>Time</span><span>Direction</span><span>Price</span><span style="text-align:right">Quantity</span></div>
+            <div id="deal-container" class="deal-list"></div>
+        </div>
+
+        <div id="view-info" class="sub-view">
+            <div class="info-content">
+                <p class="info-desc" id="info-desc">Loading...</p>
+                <div class="info-grid">
+                    <div class="info-row"><span style="color:var(--text-muted)">Issuing date</span><span style="color:var(--text-light)" id="info-date">--</span></div>
+                    <div class="info-row"><span style="color:var(--text-muted)">Max Supply</span><span style="color:var(--text-light)" id="info-num">--</span></div>
+                    <div class="info-row"><span style="color:var(--text-muted)">Official website</span><a href="#" style="color:var(--primary-yellow)" id="info-web">--</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn-action btn-bullish" onclick="placeOrder('Bullish')">Bullish</button>
+        <button class="btn-action btn-bearish" onclick="placeOrder('Bearish')">Bearish</button>
+    </div>
+
+    <div class="menu-overlay" id="overlay" onclick="toggleMenu(false)"></div>
+    <div class="bottom-menu" id="coin-menu">
+        <div class="bm-header">Select Contract</div>
+        <div id="coin-list"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="mobile.html" class="b-nav-item"><i class="fas fa-home"></i>Home</a>
+        <a href="mobile_market.html" class="b-nav-item"><i class="fas fa-chart-bar"></i>Markets</a>
+        <a href="mobile_exchange.html" class="b-nav-item"><i class="fas fa-exchange-alt"></i>Trade</a>
+        <a href="mobile_contracts.html" class="b-nav-item active"><i class="fas fa-file-contract"></i>Contracts</a>
+        <a href="mobile_assets.html" class="b-nav-item"><i class="fas fa-wallet"></i>Balance</a>
+    </div>
+
+    <div class="modal-overlay" id="wait-modal">
+        <div class="modal-box">
+            <i class="fas fa-satellite-dish fa-spin" style="font-size:30px; color:var(--primary-yellow); margin-bottom:15px;"></i>
+            <div style="font-size:16px; font-weight:bold; color:var(--text-light); margin-bottom:5px;">Connecting Market...</div>
+            <div style="font-size:12px; color:var(--text-muted);">Syncing US/Global Feeds</div>
+        </div>
+    </div>
+
+    <script>
+        // --- NOTIFICATION LOGIC ---
+        async function fetchNotifications() {
+            const userId = localStorage.getItem('bitx_user_id');
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/notifications/${userId}`); 
+                if (!response.ok) return;
+                const notifications = await response.json();
+                
+                const badge = document.getElementById('nav-badge');
+                const list = document.getElementById('notification-list');
+                
+                const unread = notifications.filter(n => !n.isRead);
+                
+                if (unread.length > 0) {
+                    badge.innerText = unread.length;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="nd-empty">No new notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = notifications.map(n => `
+                    <div class="nd-item ${n.isRead ? '' : 'unread'}">
+                        <div class="nd-title">${n.title}</div>
+                        <div class="nd-msg">${n.message}</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">
+                            ${new Date(n.createdAt).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("Failed to load notifications:", error);
+            }
+        }
+
+        async function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            const isShowing = dropdown.style.display === 'flex';
+            
+            if (isShowing) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'flex';
+                const userId = localStorage.getItem('bitx_user_id');
+                if (userId) {
+                    fetch(`/api/notifications/${userId}/read`, { method: 'POST' })
+                        .then(() => fetchNotifications()); 
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notification-dropdown').style.display = 'none';
+            }
+        });
+
+
+        // --- COIN CONFIG ---
+        const coins = [
+            { sym: "BTC", name: "bitcoin", img: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png" },
+            { sym: "ETH", name: "ethereum", img: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
+            { sym: "SOL", name: "solana", img: "https://assets.coingecko.com/coins/images/4128/small/solana.png" },
+            { sym: "BNB", name: "binance-coin", img: "https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png" },
+            { sym: "XRP", name: "ripple", img: "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png" },
+            { sym: "TRX", name: "tron", img: "https://assets.coingecko.com/coins/images/1094/small/tron-logo.png" },
+            { sym: "DOGE", name: "dogecoin", img: "https://assets.coingecko.com/coins/images/5/small/dogecoin.png" },
+            { sym: "LTC", name: "litecoin", img: "https://assets.coingecko.com/coins/images/2/small/litecoin.png" },
+            { sym: "ADA", name: "cardano", img: "https://assets.coingecko.com/coins/images/975/small/cardano.png" }
+        ];
+
+        const coinInfoData = {
+            'BTC': { desc: "Bitcoin is the first decentralized digital currency.", date: "2008/11", num: "21M", web: "bitcoin.org" },
+            'ETH': { desc: "Ethereum is a decentralized platform for smart contracts.", date: "2015/07", num: "Unlimited", web: "ethereum.org" },
+            'DEFAULT': { desc: "Decentralized digital asset.", date: "2021/01", num: "1B", web: "bitxex.com" }
+        };
+
+        let currentSym = 'BTC';
+        let currentName = 'bitcoin';
+        let currentPrice = 0; 
+        let activeTab = 'order';
+        let socket = null;
+        let apiMode = 'coinbase'; 
+        let currentInterval = '1'; // Added state for the chart interval
+
+        // INIT
+        window.onload = () => {
+            fetchNotifications();
+            setInterval(fetchNotifications, 15000);
+            
+            selectCoin('BTC', 'bitcoin');
+        };
+
+        // --- NEW: Timeframe Switching Logic ---
+        function switchTimeframe(interval, element) {
+            currentInterval = interval;
+            
+            // Remove 'active' class from all timeframes and add to clicked one
+            document.querySelectorAll('.tf-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            // Re-render chart with new interval
+            initChart(currentSym);
+        }
+
+        function switchSubTab(tabName, element) {
+            activeTab = tabName;
+            document.querySelectorAll('.ot-item').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.sub-view').forEach(v => v.style.display = 'none');
+            document.getElementById(`view-${tabName}`).style.display = 'flex';
+            if(currentPrice > 0) renderSimulation(true); 
+        }
+
+        async function selectCoin(sym, name) {
+            currentSym = sym;
+            currentName = name || coins.find(c => c.sym === sym).name;
+            document.getElementById('pair-title').innerHTML = `${sym}/USDT <i class="fas fa-caret-down tb-arrow" style="font-size:12px; color:var(--text-muted);"></i>`;
+            
+            const info = coinInfoData[sym] || coinInfoData['DEFAULT'];
+            document.getElementById('info-desc').innerText = info.desc;
+            document.getElementById('info-date').innerText = info.date;
+            document.getElementById('info-num').innerText = info.num;
+            document.getElementById('info-web').innerText = info.web;
+
+            initChart(sym);
+            document.getElementById('wait-modal').style.display = 'flex';
+            
+            await raceForPrice();
+            
+            connectWebSocket(sym, currentName); 
+            
+            renderCoinList(); 
+            
+            toggleMenu(false);
+            document.getElementById('deal-container').innerHTML = ""; 
+        }
+
+        async function raceForPrice() {
+            const fetchCoinbase = fetch(`https://api.coinbase.com/v2/prices/${currentSym}-USD/spot`)
+                .then(r => r.json())
+                .then(d => ({ source: 'coinbase', price: parseFloat(d.data.amount) }));
+
+            const fetchCoinCap = fetch(`https://api.coincap.io/v2/assets/${currentName}`)
+                .then(r => r.json())
+                .then(d => ({ source: 'coincap', price: parseFloat(d.data.priceUsd) }));
+
+            const fetchBinance = fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${currentSym}USDT`)
+                .then(r => r.json())
+                .then(d => ({ source: 'binance', price: parseFloat(d.price) }));
+
+            try {
+                const winner = await Promise.any([fetchCoinbase, fetchCoinCap, fetchBinance]);
+                apiMode = winner.source;
+                updatePriceUI(winner.price);
+            } catch(e) {
+                console.log("All failed");
+            } finally {
+                document.getElementById('wait-modal').style.display = 'none';
+            }
+        }
+
+        function updatePriceUI(price) {
+            currentPrice = price;
+            document.getElementById('main-price').innerText = currentPrice.toFixed(2);
+            renderSimulation(true);
+        }
+
+        function connectWebSocket(symbol, name) {
+            if(socket) socket.close(); 
+
+            let wsUrl = "";
+            if(apiMode === 'coinbase') {
+                wsUrl = "wss://ws-feed.exchange.coinbase.com";
+            } else if(apiMode === 'coincap') {
+                wsUrl = `wss://ws.coincap.io/prices?assets=${name}`;
+            } else {
+                wsUrl = `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}usdt@ticker`;
+            }
+
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                if(apiMode === 'coinbase') {
+                    const msg = { type: "subscribe", product_ids: [`${symbol}-USD`], channels: ["ticker"] };
+                    socket.send(JSON.stringify(msg));
+                }
+            };
+
+            socket.onerror = () => {
+                if(apiMode === 'coinbase') { apiMode = 'coincap'; }
+                else if(apiMode === 'coincap') { apiMode = 'binance'; }
+                else { apiMode = 'coinbase'; }
+                connectWebSocket(symbol, name);
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                let price = 0;
+
+                if(apiMode === 'coinbase' && data.type === 'ticker') {
+                    price = parseFloat(data.price);
+                } 
+                else if(apiMode === 'coincap' && data[name]) {
+                    price = parseFloat(data[name]);
+                } 
+                else if(apiMode === 'binance' && data.c) {
+                    price = parseFloat(data.c);
+                }
+
+                if(price > 0) {
+                    currentPrice = price;
+                    document.getElementById('main-price').innerText = currentPrice.toFixed(2);
+                    
+                    if(apiMode === 'binance') {
+                        const change = parseFloat(data.P);
+                        const el = document.getElementById('price-change');
+                        el.innerText = (change>0?'+':'') + change.toFixed(2) + '%';
+                        el.style.color = change >= 0 ? 'var(--success-green)' : 'var(--danger-red)';
+                    }
+                    
+                    renderSimulation(false);
+                }
+            };
+        }
+
+        function placeOrder(type) {
+            if(currentPrice === 0) {
+                document.getElementById('wait-modal').style.display = 'flex';
+                raceForPrice();
+                return;
+            }
+            const price = currentPrice.toFixed(2);
+            if (type === 'Bullish') window.location.href = `mobile_bullish.html?symbol=${currentSym}&price=${price}`;
+            if (type === 'Bearish') window.location.href = `mobile_bearish.html?symbol=${currentSym}&price=${price}`;
+        }
+
+        // SIMULATION - FIXED COLORS FOR QUANTITIES AND PRICES
+        function renderSimulation(force) {
+            if(currentPrice === 0) return;
+            if(activeTab === 'order' || force) {
+                let html = '';
+                const spread = currentPrice * 0.0002;
+                for(let i=0; i<8; i++) {
+                    const bid = (currentPrice - (spread * (i+1))).toFixed(2);
+                    const ask = (currentPrice + (spread * (i+1))).toFixed(2);
+                    
+                    html += `<div class="ob-row">
+                        <span class="ob-qty" style="color:var(--text-light)">${(Math.random()*0.5).toFixed(4)}</span>
+                        <span class="ob-price-bid text-green">${bid}</span>
+                        <span class="ob-price-ask text-red">${ask}</span>
+                        <span class="ob-qty-right" style="color:var(--text-light)">${(Math.random()*0.5).toFixed(4)}</span>
+                    </div>`;
+                }
+                document.getElementById('ob-container').innerHTML = html;
+            }
+            if(Math.random() > 0.7 || force) addDealRow();
+        }
+
+        function addDealRow() {
+            const isBuy = Math.random() > 0.5;
+            const colorClass = isBuy ? 'text-green' : 'text-red';
+            const typeText = isBuy ? 'Buy' : 'Sell';
+            const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:"2-digit", minute:"2-digit", second:"2-digit"});
+            const dealPrice = (currentPrice + (Math.random() - 0.5)).toFixed(2);
+            const newRow = `<div class="deal-row"><span style="color:var(--text-muted)">${time}</span><span class="${colorClass}">${typeText}</span><span style="color:var(--text-light)">${dealPrice}</span><span style="text-align:right; color:var(--text-light)">${(Math.random()*0.5).toFixed(4)}</span></div>`;
+            const container = document.getElementById('deal-container');
+            container.insertAdjacentHTML('afterbegin', newRow);
+            if(container.children.length > 20) container.removeChild(container.lastChild);
+        }
+
+        // --- UPDATED: Uses dynamic currentInterval ---
+        function initChart(sym) {
+            document.getElementById('tv_chart_container').innerHTML = "";
+            new TradingView.widget({
+                "autosize": true, 
+                "symbol": `BINANCE:${sym}USDT.P`, 
+                "interval": currentInterval, // Automatically pulls from state
+                "timezone": "Etc/UTC", 
+                "theme": "dark", 
+                "style": "1", 
+                "locale": "en",
+                "toolbar_bg": "#0b0e11", 
+                "enable_publishing": false,
+                "hide_top_toolbar": true, 
+                "hide_side_toolbar": true,
+                "container_id": "tv_chart_container",
+                "overrides": { 
+                    "paneProperties.background": "#0b0e11", 
+                    "paneProperties.vertGridProperties.color": "#2b3139", 
+                    "paneProperties.horzGridProperties.color": "#2b3139" 
+                }
+            });
+        }
+
+        function renderCoinList() {
+            const list = document.getElementById('coin-list');
+            list.innerHTML = "";
+            coins.forEach(c => {
+                const isActive = c.sym === currentSym ? 'background:var(--bg-hover); border-left: 3px solid var(--primary-yellow);' : '';
+                list.innerHTML += `<div class="bm-item" style="${isActive}" onclick="selectCoin('${c.sym}', '${c.name}')"><img src="${c.img}" class="bm-icon"><div class="bm-name">${c.sym}/USDT</div><div class="bm-price" style="color:var(--primary-yellow)">Live</div></div>`;
+            });
+        }
+
+        function toggleMenu(show) { document.getElementById('overlay').style.display = show ? 'block' : 'none'; document.getElementById('coin-menu').classList.toggle('active', show); }
+    </script>
+</body>
+</html>

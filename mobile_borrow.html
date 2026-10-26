@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Borrow</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f5f5f5;
+            --bg-card: #ffffff;
+            --primary: #4e6ae6;
+            --text-dark: #333;
+            --text-light: #8a9fb6;
+            --border: #eeeeee;
+            --green: #00d68f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); color: var(--text-dark); padding-bottom: 80px; }
+
+        /* HEADER */
+        .header { background: var(--bg-card); padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .h-title { font-size: 18px; font-weight: bold; }
+        .h-back { font-size: 20px; color: var(--text-dark); cursor: pointer; }
+
+        /* MAIN CARD */
+        .loan-card { background: var(--bg-card); margin: 15px; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        
+        .input-group { margin-bottom: 20px; }
+        .label { font-size: 12px; color: var(--text-light); margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .input-wrapper { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: #fafafa; }
+        .input-field { flex: 1; border: none; background: transparent; font-size: 18px; font-weight: bold; color: var(--text-dark); outline: none; }
+        .coin-select { font-weight: bold; color: var(--text-dark); display: flex; align-items: center; gap: 5px; }
+        .coin-icon { width: 20px; height: 20px; border-radius: 50%; }
+
+        /* TERMS */
+        .terms-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .term-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; text-align: center; font-size: 12px; cursor: pointer; transition: 0.2s; background: white; }
+        .term-btn.active { border-color: var(--primary); background: rgba(78, 106, 230, 0.1); color: var(--primary); font-weight: bold; }
+
+        /* INFO BOX */
+        .info-box { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .info-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+        .info-row:last-child { margin-bottom: 0; border-top: 1px solid #eee; padding-top: 8px; font-weight: bold; }
+        .info-val { color: var(--text-dark); }
+
+        /* ACTION BUTTON */
+        .btn-submit { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(78, 106, 230, 0.3); transition: transform 0.2s; }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* ASSETS BAR */
+        .assets-bar { font-size: 11px; color: var(--text-light); text-align: right; margin-top: 5px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-between; padding: 0 10px; z-index: 90; }
+        .b-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-light); text-decoration: none; font-size: 10px; font-weight: 500; }
+        .b-nav-item i { font-size: 20px; margin-bottom: 4px; }
+
+        /* --- POPUP STYLES --- */
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .popup-card {
+            background: white; width: 85%; max-width: 320px;
+            border-radius: 20px; padding: 30px 20px;
+            text-align: center; position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .popup-icon {
+            width: 60px; height: 60px; background: #fff0f0; color: #ff4d4d;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 15px;
+        }
+        .popup-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }
+        .popup-msg { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 25px; }
+        .popup-btn {
+            background: #333; color: white; border: none; padding: 12px 30px;
+            border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="mobile.html" class="h-back"><i class="fas fa-arrow-left"></i></a>
+        <div class="h-title">Crypto Loan</div>
+        <div style="width:20px;"></div>
+    </div>
+
+    <div class="loan-card">
+        <div class="input-group">
+            <div class="label">I want to borrow</div>
+            <div class="input-wrapper">
+                <input type="number" id="borrow-amount" class="input-field" placeholder="Min 100" oninput="calculateCollateral()">
+                <div class="coin-select">
+                    <img src="https://assets.coingecko.com/coins/images/325/small/Tether.png" class="coin-icon"> USDT
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="label">
+                <span>Collateral Required</span>
+                <span>Balance: <span id="col-bal">0.00</span> BTC</span>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" id="collateral-amount" class="input-field" value="0.00" readonly style="color:var(--text-light)">
+                <select id="col-coin" onchange="updateCoin()" style="border:none; font-weight:bold; outline:none; background:transparent;">
+                    <option value="BTC">BTC</option>
+                    <option value="ETH">ETH</option>
+                    <option value="BNB">BNB</option>
+                </select>
+            </div>
+            <div class="assets-bar" id="price-status">Loading market data...</div>
+        </div>
+
+        <div class="label">Loan Term</div>
+        <div class="terms-grid">
+            <div class="term-btn active" onclick="selectTerm(7)">7 Days</div>
+            <div class="term-btn" onclick="selectTerm(14)">14 Days</div>
+            <div class="term-btn" onclick="selectTerm(30)">30 Days</div>
+            <div class="term-btn" onclick="selectTerm(90)">90 Days</div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-row">
+                <span>Hourly Interest Rate</span>
+                <span class="info-val">0.005%</span>
+            </div>
+            <div class="info-row">
+                <span>Total Interest</span>
+                <span class="info-val" id="total-interest">0.00 USDT</span>
+            </div>
+            <div class="info-row">
+                <span>Repayment Amount</span>
+                <span class="info-val" id="repayment-total" style="color:var(--primary)">0.00 USDT</span>
+            </div>
+        </div>
+
+        <button class="btn-submit" id="btn-confirm" onclick="showPopup()" disabled>Enter Amount</button>
+    </div>
+
+    <div class="popup-overlay" id="loan-popup">
+        <div class="popup-card">
+            <div class="popup-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="popup-title">Application Denied</div>
+            <div class="popup-msg">
+                New users are not eligible for this application. Please try again after 30 days of active trading history.
+            </div>
+            <button class="popup-btn" onclick="hidePopup()">Understood</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="mobile.html" class="b-nav-item"><i class="fas fa-home"></i>Home</a>
+        <a href="mobile_market.html" class="b-nav-item"><i class="fas fa-chart-bar"></i>Markets</a>
+        <a href="mobile_exchange.html" class="b-nav-item"><i class="fas fa-exchange-alt"></i>Trade</a>
+        <a href="mobile_contract.html" class="b-nav-item"><i class="fas fa-file-contract"></i>Contracts</a>
+        <a href="mobile_assets.html" class="b-nav-item"><i class="fas fa-wallet"></i>Balance</a>
+    </div>
+
+    <script>
+        const API_URL = 'https://bitx-app-v2.onrender.com';
+        const userId = localStorage.getItem('bitx_user_id');
+        
+        let currentPrice = 0;
+        let selectedCoin = 'BTC';
+        let userBalance = 0;
+        let selectedDays = 7;
+        const LTV = 0.70; 
+        const DAILY_INTEREST = 0.0012;
+
+        window.onload = async () => {
+            if(!userId) window.location.href = 'login.html';
+            await fetchMarketData();
+            await fetchUserBalance();
+        };
+
+        // 1. Fetch Market Price
+        async function fetchMarketData() {
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + selectedCoin + 'USDT');
+                const data = await res.json();
+                currentPrice = parseFloat(data.price);
+                document.getElementById('price-status').innerText = `1 ${selectedCoin} ≈ ${currentPrice.toFixed(2)} USDT`;
+                calculateCollateral();
+            } catch(e) { console.error(e); }
+        }
+
+        // 2. Fetch User Balance
+        async function fetchUserBalance() {
+            try {
+                const res = await fetch(`${API_URL}/api/user/${userId}`);
+                const user = await res.json();
+                const key = selectedCoin.toLowerCase();
+                userBalance = user.balance[key] || 0;
+                document.getElementById('col-bal').innerText = userBalance.toFixed(4);
+            } catch(e) { console.error(e); }
+        }
+
+        // 3. UI Logic
+        function updateCoin() {
+            selectedCoin = document.getElementById('col-coin').value;
+            fetchMarketData();
+            fetchUserBalance();
+        }
+
+        function selectTerm(days) {
+            selectedDays = days;
+            document.querySelectorAll('.term-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText.includes(days)) btn.classList.add('active');
+            });
+            calculateCollateral();
+        }
+
+        function calculateCollateral() {
+            const borrowAmt = parseFloat(document.getElementById('borrow-amount').value) || 0;
+            
+            // LTV Calculation
+            const requiredUSDT = borrowAmt / LTV;
+            const requiredCoin = requiredUSDT / currentPrice;
+
+            document.getElementById('collateral-amount').value = requiredCoin.toFixed(6);
+
+            // Interest
+            const interest = borrowAmt * DAILY_INTEREST * selectedDays;
+            const total = borrowAmt + interest;
+
+            document.getElementById('total-interest').innerText = interest.toFixed(2) + ' USDT';
+            document.getElementById('repayment-total').innerText = total.toFixed(2) + ' USDT';
+
+            // Button State
+            const btn = document.getElementById('btn-confirm');
+            
+            // Enable button only if amount is valid (We don't block for balance here, just amount)
+            // If you want to enforce balance check even for the popup, uncomment the check
+            if(borrowAmt >= 100) {
+                btn.disabled = false;
+                btn.innerText = "Start Borrowing";
+            } else {
+                btn.disabled = true;
+                btn.innerText = "Min Borrow 100 USDT";
+            }
+        }
+
+        // 4. POPUP LOGIC
+        function showPopup() {
+            document.getElementById('loan-popup').style.display = 'flex';
+        }
+
+        function hidePopup() {
+            document.getElementById('loan-popup').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>

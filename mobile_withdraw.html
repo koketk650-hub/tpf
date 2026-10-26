@@ -1,0 +1,623 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        if(!localStorage.getItem('bitx_user_id') && !localStorage.getItem('user_id')) {
+            window.location.href = 'mobile.html'; 
+        }
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Withdraw</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        /* --- DARK & YELLOW THEME VARIABLES --- */
+        :root { 
+            --bg-dark: #0b0e11; 
+            --bg-card: #181a20; 
+            --text-light: #eaecef; 
+            --text-muted: #848e9c; 
+            --primary-yellow: #f3ba2f; 
+            --danger-red: #f6465d; 
+            --success-green: #0ecb81; 
+            --border-dark: #2b3139;
+        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text-light); margin: 0; padding-bottom: 20px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* HEADER */
+        .header { padding: 15px; border-bottom: 1px solid var(--border-dark); font-size: 18px; font-weight: 700; text-align: center; position: sticky; top: 0; background: var(--bg-card); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .back-btn { position: absolute; left: 15px; cursor: pointer; color: var(--text-muted); font-size: 20px; transition: color 0.2s; }
+        .back-btn:active { color: var(--text-light); }
+        
+        .header-right { position: absolute; right: 15px; font-size: 18px; color: var(--text-muted); display: flex; align-items: center; gap: 15px; }
+        .header-right i { cursor: pointer; transition: color 0.2s; }
+        .header-right i:active { color: var(--text-light); }
+
+        /* NOTIFICATIONS */
+        .notification-wrapper { position: relative; display: flex; align-items: center; }
+        .nav-badge { position: absolute; top: -5px; right: -5px; background: var(--danger-red); color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; display: none; }
+        .notification-dropdown { position: absolute; top: 35px; right: 0px; width: 280px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 10000; border: 1px solid var(--border-dark); text-align: left; font-weight: normal; }
+        .nd-header { padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-dark); color: var(--text-light); font-size: 14px; }
+        .nd-list { max-height: 300px; overflow-y: auto; }
+        .nd-item { padding: 15px; border-bottom: 1px solid var(--border-dark); text-align: left;}
+        .nd-item.unread { border-left: 3px solid var(--primary-yellow); background: rgba(243, 186, 47, 0.05); }
+        .nd-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--text-light); }
+        .nd-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .nd-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        /* FORM CONTAINER */
+        .container { padding: 20px; }
+
+        /* INPUT GROUPS */
+        .form-group { margin-bottom: 20px; }
+        .label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+        
+        /* COIN SELECTOR */
+        .coin-select { 
+            background: var(--bg-card); border-radius: 8px; padding: 14px 15px; 
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer; 
+            border: 1px solid var(--border-dark); transition: border-color 0.2s;
+        }
+        .coin-select:active { border-color: var(--primary-yellow); }
+        .cs-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-light); }
+        .coin-icon { width: 24px; height: 24px; border-radius: 50%; }
+
+        /* TEXT & SELECT INPUTS */
+        .input-wrapper { position: relative; }
+        .form-input { 
+            width: 100%; background: var(--bg-card); border: 1px solid var(--border-dark); 
+            border-radius: 8px; padding: 14px 15px; font-size: 15px; color: var(--text-light); outline: none; 
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary-yellow); }
+        .form-input::placeholder { color: #555; }
+        
+        select.form-input {
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        select.form-input option {
+            background: var(--bg-card);
+            color: var(--text-light);
+        }
+        .select-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* SUFFIX ICONS/BUTTONS */
+        .input-suffix { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; gap: 10px; align-items: center; }
+        .scan-icon { font-size: 18px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .scan-icon:active { color: var(--primary-yellow); }
+        .max-btn { font-size: 13px; color: var(--primary-yellow); font-weight: 700; cursor: pointer; padding-left: 10px; border-left: 1px solid var(--border-dark); }
+
+        /* BALANCE INFO */
+        .bal-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 8px; padding: 0 5px; }
+        .bal-val { color: var(--text-light); font-weight: 600; }
+
+        /* NETWORK INFO */
+        .net-box { background: rgba(243, 186, 47, 0.1); border: 1px solid rgba(243, 186, 47, 0.3); border-radius: 6px; padding: 10px; font-size: 12px; color: var(--primary-yellow); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+        /* SUMMARY */
+        .summary { margin-top: 30px; border-top: 1px solid var(--border-dark); padding-top: 15px; }
+        .sum-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; color: var(--text-muted); }
+        .sum-val { color: var(--text-light); font-weight: 600; }
+
+        /* BUTTON */
+        .btn-submit { 
+            width: 100%; background: var(--primary-yellow); color: #000; border: none; 
+            padding: 16px; border-radius: 8px; font-size: 16px; font-weight: 700; 
+            cursor: pointer; margin-top: 20px; transition: transform 0.1s;
+            box-shadow: 0 4px 15px rgba(243, 186, 47, 0.2);
+        }
+        .btn-submit:active { transform: scale(0.98); }
+
+        /* MODAL (DRAWER) */
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; backdrop-filter: blur(2px); }
+        .drawer { 
+            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-card); 
+            border-top-left-radius: 20px; border-top-right-radius: 20px; 
+            padding: 20px; max-height: 70vh; overflow-y: auto; animation: slideUp 0.3s; 
+            border-top: 1px solid var(--border-dark);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .drawer-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; text-align: center; color: var(--primary-yellow); }
+        .coin-item { display: flex; align-items: center; padding: 15px 10px; border-bottom: 1px solid var(--border-dark); cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .coin-item:active { background: var(--bg-hover); }
+        .ci-icon { width: 28px; height: 28px; margin-right: 15px; }
+        .ci-name { font-size: 15px; font-weight: 600; flex: 1; color: var(--text-light); }
+        .ci-bal { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+        /* SCANNER MODAL */
+        #scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #reader { width: 100%; max-width: 400px; }
+        .close-scanner { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; z-index: 3001; }
+
+        /* --- CUSTOM POPUP MODAL (DARK THEME) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 4000;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            background: var(--bg-card); padding: 25px; border-radius: 16px;
+            width: 85%; max-width: 320px; text-align: center;
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid var(--border-dark);
+        }
+        .modal-icon { font-size: 40px; margin-bottom: 15px; }
+        .modal-title { font-size: 18px; font-weight: bold; color: var(--text-light); margin-bottom: 10px; }
+        .modal-msg { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; }
+        
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        
+        .modal-btn {
+            background: var(--primary-yellow); color: #000; border: none; padding: 12px 0;
+            border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer; flex: 1;
+        }
+        .modal-btn:active { transform: scale(0.98); }
+        .btn-cancel { background: var(--bg-dark); color: var(--text-muted); border: 1px solid var(--border-dark); }
+        .btn-cancel:active { background: var(--bg-dark); }
+
+        /* --- LOADING OVERLAY --- */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 14, 17, 0.9); z-index: 5000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(243, 186, 47, 0.2);
+            border-radius: 50%; border-top-color: var(--primary-yellow);
+            animation: spin 1s ease-in-out infinite; margin-bottom: 15px;
+        }
+        .loading-text { color: var(--primary-yellow); font-size: 14px; font-weight: bold; letter-spacing: 1px; animation: pulse 1.5s infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-chevron-left back-btn" onclick="window.location.href='mobile_assets.html'"></i>
+        Withdraw
+        <div class="header-right">
+            <i class="fas fa-history" onclick="window.location.href='mobile_history.html'"></i>
+            <div class="notification-wrapper" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                <div class="nav-badge" id="nav-badge">0</div>
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <div class="nd-header">Notifications</div>
+                    <div id="notification-list" class="nd-list">
+                        <div class="nd-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="form-group">
+            <label class="label">Coin</label>
+            <div class="coin-select" onclick="openDrawer()">
+                <div class="cs-left">
+                    <img src="https://assets.coingecko.com/coins/images/325/small/Tether.png" class="coin-icon" id="sel-img">
+                    <span id="sel-sym">USDT</span>
+                </div>
+                <i class="fas fa-chevron-right" style="font-size:12px; color:var(--text-muted);"></i>
+            </div>
+        </div>
+
+        <div class="net-box">
+            <i class="fas fa-info-circle"></i>
+            <span>Ensure the network matches the withdrawal address.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="label">Network</label>
+            <div class="input-wrapper">
+                <select class="form-input" id="inp-net"></select>
+                <i class="fas fa-chevron-down select-icon"></i>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="label">Address</label>
+            <div class="input-wrapper">
+                <input type="text" class="form-input" id="inp-addr" placeholder="Long press to paste">
+                <div class="input-suffix">
+                    <i class="fas fa-qrcode scan-icon" onclick="startScanner()"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="label">Amount</label>
+            <div class="input-wrapper">
+                <input type="number" class="form-input" id="inp-amount" placeholder="Min 10.00">
+                <div class="input-suffix">
+                    <span style="font-size:12px; color:var(--text-muted);" id="unit-disp">USDT</span>
+                    <span class="max-btn" onclick="setMax()">ALL</span>
+                </div>
+            </div>
+            <div class="bal-row">
+                <span>Available</span>
+                <span class="bal-val" id="avail-bal">0.000000</span>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="sum-row">
+                <span>Network Fee (1%)</span>
+                <span class="sum-val"><span id="fee-val">0.00</span> <span id="fee-unit">USDT</span></span>
+            </div>
+            <div class="sum-row">
+                <span>Arrival Amount</span>
+                <span class="sum-val" style="font-size:18px; color:var(--primary-yellow);" id="final-amt">0.00</span>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="initiateWithdraw()">Confirm Withdrawal</button>
+
+    </div>
+
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer(event)">
+        <div class="drawer">
+            <div class="drawer-title">Select Coin</div>
+            <div id="coin-list"></div>
+        </div>
+    </div>
+
+    <div id="scanner-modal">
+        <div class="close-scanner" onclick="stopScanner()">&times;</div>
+        <div id="reader"></div>
+        <p style="color:white; margin-top:20px;">Point camera at QR Code</p>
+    </div>
+
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon"></div>
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-msg" id="modal-msg"></div>
+            <div class="modal-actions" id="modal-actions"></div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">PROCESSING...</div>
+    </div>
+
+    <script>
+        const API_URL = '/api'; 
+        const userId = localStorage.getItem('bitx_user_id') || localStorage.getItem('user_id');
+        let selectedCoin = null;
+        let balances = {};
+        let html5QrcodeScanner = null;
+
+        // --- NOTIFICATION LOGIC ---
+        async function fetchNotifications() {
+            if (!userId) return;
+            try {
+                const response = await fetch(`/api/notifications/${userId}`); 
+                if (!response.ok) return;
+                const notifications = await response.json();
+                
+                const badge = document.getElementById('nav-badge');
+                const list = document.getElementById('notification-list');
+                
+                const unread = notifications.filter(n => !n.isRead);
+                
+                if (unread.length > 0) {
+                    badge.innerText = unread.length;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="nd-empty">No new notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = notifications.map(n => `
+                    <div class="nd-item ${n.isRead ? '' : 'unread'}">
+                        <div class="nd-title">${n.title}</div>
+                        <div class="nd-msg">${n.message}</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">
+                            ${new Date(n.createdAt).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("Failed to load notifications:", error);
+            }
+        }
+
+        async function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            const isShowing = dropdown.style.display === 'flex';
+            
+            if (isShowing) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'flex';
+                if (userId) {
+                    fetch(`/api/notifications/${userId}/read`, { method: 'POST' })
+                        .then(() => fetchNotifications()); 
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notification-dropdown').style.display = 'none';
+            }
+        });
+
+        // FIXED: Replaced static 'net' string with dynamic 'networks' array. 
+        // USDT defaults to ERC20 by placing it first in the list.
+        const coins = [
+            { sym: "USDT", name: "Tether", networks: ["ERC20", "TRC20", "BEP20", "Polygon"], img: "https://assets.coingecko.com/coins/images/325/small/Tether.png" },
+            { sym: "BTC", name: "Bitcoin", networks: ["Bitcoin", "BEP20"], img: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png" },
+            { sym: "ETH", name: "Ethereum", networks: ["ERC20", "Arbitrum", "Optimism", "BEP20"], img: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
+            { sym: "BNB", name: "BNB", networks: ["BEP20", "BEP2"], img: "https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png" },
+            { sym: "SOL", name: "Solana", networks: ["Solana"], img: "https://assets.coingecko.com/coins/images/4128/small/solana.png" },
+            { sym: "XRP", name: "XRP", networks: ["Ripple"], img: "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png" },
+            { sym: "USDC", name: "USDC", networks: ["ERC20", "TRC20", "BEP20", "Polygon"], img: "https://assets.coingecko.com/coins/images/6319/small/usdc.png" },
+            { sym: "ADA", name: "Cardano", networks: ["Cardano"], img: "https://assets.coingecko.com/coins/images/975/small/cardano.png" },
+            { sym: "DOGE", name: "Dogecoin", networks: ["Dogecoin", "BEP20"], img: "https://assets.coingecko.com/coins/images/5/small/dogecoin.png" },
+            { sym: "TRX", name: "Tron", networks: ["TRC20"], img: "https://assets.coingecko.com/coins/images/1094/small/tron-logo.png" },
+            { sym: "TON", name: "Toncoin", networks: ["TON"], img: "https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png" },
+            { sym: "AVAX", name: "Avalanche", networks: ["C-Chain", "X-Chain"], img: "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png" },
+            { sym: "SHIB", name: "Shiba Inu", networks: ["ERC20", "BEP20"], img: "https://assets.coingecko.com/coins/images/11939/small/shiba.png" },
+            { sym: "DOT", name: "Polkadot", networks: ["Polkadot"], img: "https://assets.coingecko.com/coins/images/12171/small/polkadot.png" },
+            { sym: "LTC", name: "Litecoin", networks: ["Litecoin", "BEP20"], img: "https://assets.coingecko.com/coins/images/2/small/litecoin.png" }
+        ];
+
+        selectedCoin = coins[0]; // Default
+
+        // INIT
+        window.onload = () => {
+            if(!userId) window.location.href = 'mobile.html';
+            fetchBalances();
+            renderCoinList();
+            updateUI(); // Setup default UI on load
+            document.getElementById('inp-amount').addEventListener('input', updateMath);
+            fetchNotifications();
+            setInterval(fetchNotifications, 15000);
+        };
+
+        // --- UI HELPERS ---
+        function showModal(title, message, isError = true) {
+            const overlay = document.getElementById('custom-modal');
+            const icon = document.getElementById('modal-icon');
+            
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerHTML = message;
+            document.getElementById('modal-actions').innerHTML = `<button class="modal-btn" onclick="closeModal()">Okay</button>`;
+            
+            if(isError) {
+                icon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                icon.style.color = 'var(--danger-red)';
+            } else {
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                icon.style.color = 'var(--success-green)';
+            }
+
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.opacity = '1'; overlay.querySelector('.modal-content').style.transform = 'scale(1)'; }, 10);
+        }
+
+        // CONFIRM MODAL
+        function showConfirmModal(details, onConfirm) {
+            const overlay = document.getElementById('custom-modal');
+            
+            document.getElementById('modal-title').innerText = "Confirm Withdrawal";
+            document.getElementById('modal-msg').innerHTML = details;
+            document.getElementById('modal-icon').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--primary-yellow)"></i>';
+            
+            const actions = document.getElementById('modal-actions');
+            actions.innerHTML = `
+                <button class="modal-btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn" id="btn-confirm-action">Confirm</button>
+            `;
+            
+            document.getElementById('btn-confirm-action').onclick = function() {
+                closeModal();
+                setTimeout(onConfirm, 300);
+            };
+
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.opacity = '1'; overlay.querySelector('.modal-content').style.transform = 'scale(1)'; }, 10);
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('custom-modal');
+            overlay.style.opacity = '0';
+            overlay.querySelector('.modal-content').style.transform = 'scale(0.8)';
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
+
+        function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+
+
+        // --- LOGIC ---
+        async function fetchBalances() {
+            try {
+                const res = await fetch(`${API_URL}/user/${userId}`);
+                const data = await res.json();
+                if(data.balance) {
+                    balances = data.balance;
+                    updateUI();
+                }
+            } catch(e) {}
+        }
+
+        // --- SCANNER LOGIC ---
+        function startScanner() {
+            document.getElementById('scanner-modal').style.display = 'flex';
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render(onScanSuccess);
+        }
+
+        function onScanSuccess(decodedText) {
+            document.getElementById('inp-addr').value = decodedText;
+            stopScanner();
+        }
+
+        function stopScanner() {
+            if(html5QrcodeScanner) html5QrcodeScanner.clear();
+            document.getElementById('scanner-modal').style.display = 'none';
+        }
+
+        // --- MATH & UI ---
+        function updateUI() {
+            document.getElementById('sel-img').src = selectedCoin.img;
+            document.getElementById('sel-sym').innerText = selectedCoin.sym;
+            document.getElementById('unit-disp').innerText = selectedCoin.sym;
+            document.getElementById('fee-unit').innerText = selectedCoin.sym;
+
+            // FIXED: Populate dropdown list based on the selected coin's networks array
+            const netSelect = document.getElementById('inp-net');
+            netSelect.innerHTML = ''; 
+            selectedCoin.networks.forEach(net => {
+                const opt = document.createElement('option');
+                opt.value = net;
+                opt.textContent = net;
+                netSelect.appendChild(opt);
+            });
+
+            // Safe Balance Retrieval (Lower Case Key)
+            const key = selectedCoin.sym.toLowerCase();
+            const bal = balances[key] || 0;
+            document.getElementById('avail-bal').innerText = bal.toFixed(6) + " " + selectedCoin.sym;
+        }
+
+        function setMax() {
+            const key = selectedCoin.sym.toLowerCase();
+            const bal = balances[key] || 0;
+            document.getElementById('inp-amount').value = bal;
+            updateMath();
+        }
+
+        function updateMath() {
+            const val = parseFloat(document.getElementById('inp-amount').value) || 0;
+            const fee = val * 0.01; 
+            let final = val - fee;
+            if(final < 0) final = 0;
+            
+            document.getElementById('fee-val').innerText = fee.toFixed(4);
+            document.getElementById('final-amt').innerText = final.toFixed(4) + " " + selectedCoin.sym;
+        }
+
+        // --- DRAWER ---
+        function openDrawer() { document.getElementById('drawer-overlay').style.display = 'block'; }
+        function closeDrawer(e) { if(e.target.id === 'drawer-overlay') document.getElementById('drawer-overlay').style.display = 'none'; }
+
+        function renderCoinList() {
+            const list = document.getElementById('coin-list');
+            list.innerHTML = '';
+            coins.forEach(c => {
+                const key = c.sym.toLowerCase();
+                const bal = balances[key] || 0;
+                list.innerHTML += `
+                <div class="coin-item" onclick="selectCoin('${c.sym}')">
+                    <img src="${c.img}" class="ci-icon">
+                    <div class="ci-name">${c.name}</div>
+                    <div class="ci-bal">${bal.toFixed(4)}</div>
+                </div>`;
+            });
+        }
+
+        function selectCoin(sym) {
+            selectedCoin = coins.find(c => c.sym === sym);
+            document.getElementById('drawer-overlay').style.display = 'none';
+            document.getElementById('inp-amount').value = '';
+            updateUI();
+            updateMath();
+        }
+
+        // --- SUBMIT ---
+        async function initiateWithdraw() {
+            const amount = parseFloat(document.getElementById('inp-amount').value);
+            const addr = document.getElementById('inp-addr').value;
+            const net = document.getElementById('inp-net').value; // Still perfectly gets the dropdown selection
+
+            if(!amount || amount <= 0) return showModal("Invalid Input", "Please enter a valid amount");
+            if(!addr) return showModal("Missing Address", "Enter Withdrawal Address");
+
+            // Check Balance
+            const key = selectedCoin.sym.toLowerCase();
+            const currentBal = balances[key] || 0;
+            if(currentBal < amount) return showModal("Insufficient Funds", `You only have ${currentBal.toFixed(4)} ${selectedCoin.sym}`);
+
+            const fee = amount * 0.01;
+            const finalAmount = amount - fee;
+
+            // Show Confirmation
+            const details = `
+                <div style="text-align:left; font-size:13px; color:var(--text-muted); margin-top:10px;">
+                    <div>Coin: <b style="color:var(--text-light)">${selectedCoin.sym}</b></div>
+                    <div>Network: <b style="color:var(--text-light)">${net}</b></div>
+                    <div>Address: <span style="color:var(--text-light); word-break:break-all;">${addr}</span></div>
+                    <hr style="border-color:var(--border-dark); margin:10px 0;">
+                    <div style="display:flex; justify-content:space-between;"><span>Amount:</span> <span style="color:var(--text-light)">${amount}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Fee (1%):</span> <span style="color:var(--text-light)">${fee.toFixed(4)}</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
+                        <span>Receive:</span> <b style="color:var(--primary-yellow)">${finalAmount.toFixed(4)} ${selectedCoin.sym}</b>
+                    </div>
+                </div>
+            `;
+
+            showConfirmModal(details, () => executeWithdrawal(amount, addr, net));
+        }
+
+        async function executeWithdrawal(totalAmount, addr, net) {
+            showLoading(); 
+
+            try {
+                const res = await fetch(`${API_URL}/withdraw`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        userId,
+                        type: 'withdraw', 
+                        coin: selectedCoin.sym,
+                        amount: totalAmount,
+                        address: addr,
+                        network: net
+                    })
+                });
+
+                const data = await res.json();
+                hideLoading();
+
+                if(res.ok) {
+                    showModal("Success", "Withdrawal Submitted!<br>Please wait for the funds to be reviewed and processed", false);
+                    setTimeout(() => window.location.href = 'mobile_assets.html', 2000);
+                } else {
+                    showModal("Failed", data.message || "Insufficient Balance");
+                }
+            } catch(e) { 
+                hideLoading();
+                showModal("Network Error", "Connection failed. Please try again."); 
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitxEX | Security</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* DARK THEME VARS */
+        :root { 
+            --bg: #131722; 
+            --card: #1e222d; 
+            --text: #fff; 
+            --sub: #999; 
+            --primary: #2962ff; 
+            --border: #2a2e39; 
+            --green: #00c853; 
+            --red: #f44336; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; }
+
+        /* HEADER */
+        .header { 
+            padding: 15px; border-bottom: 1px solid var(--border); 
+            font-size: 18px; font-weight: 700; text-align: center; 
+            position: relative; background: var(--bg); z-index: 10;
+        }
+        .back-btn { position: absolute; left: 15px; top: 18px; cursor: pointer; color: var(--sub); font-size: 20px; }
+
+        /* MENU LIST */
+        .menu-list { margin-top: 20px; }
+        .menu-item { 
+            background: var(--card); padding: 18px 20px; 
+            display: flex; justify-content: space-between; 
+            border-bottom: 1px solid var(--border); align-items: center; 
+        }
+        .mi-label { font-size: 14px; font-weight: 500; }
+        .mi-val { font-size: 12px; color: var(--sub); display: flex; align-items: center; gap: 10px; }
+        
+        .btn-change { 
+            background: rgba(41, 98, 255, 0.1); color: var(--primary); border: 1px solid rgba(41, 98, 255, 0.3); 
+            padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; 
+            transition: 0.2s;
+        }
+        .btn-change:active { transform: scale(0.95); background: rgba(41, 98, 255, 0.2); }
+
+        /* MODAL */
+        .modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); display: none; 
+            align-items: center; justify-content: center; z-index: 100; 
+            backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s;
+        }
+        .modal.show { opacity: 1; }
+        
+        .modal-box { 
+            background: var(--card); width: 85%; max-width: 320px; 
+            border-radius: 16px; padding: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border);
+            transform: scale(0.9); transition: transform 0.3s;
+        }
+        .modal.show .modal-box { transform: scale(1); }
+
+        .m-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+        
+        .m-inp { 
+            width: 100%; padding: 12px; margin-bottom: 15px; 
+            background: var(--bg); border: 1px solid var(--border); 
+            color: white; border-radius: 8px; outline: none; box-sizing: border-box; 
+            font-size: 14px; transition: border 0.2s;
+        }
+        .m-inp:focus { border-color: var(--primary); }
+
+        .m-btn { 
+            width: 100%; padding: 12px; background: var(--primary); 
+            color: white; border: none; border-radius: 8px; 
+            font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 5px; 
+            box-shadow: 0 4px 10px rgba(41, 98, 255, 0.3);
+        }
+        .m-btn:active { transform: scale(0.98); }
+
+        /* TOAST NOTIFICATION STYLE */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #222; color: #fff; padding: 12px 24px;
+            border-radius: 30px; border: 1px solid #333;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 3000;
+            display: flex; align-items: center; gap: 10px;
+            opacity: 0; transition: opacity 0.3s, top 0.3s; pointer-events: none;
+            font-size: 14px; font-weight: 500;
+        }
+        .toast.show { opacity: 1; top: 30px; }
+        .toast i { font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <div class="header animate-up">
+        <i class="fas fa-chevron-left back-btn" onclick="window.location.href='mobile_profile.html'"></i>
+        Security Center
+    </div>
+
+    <div class="menu-list animate-up" style="animation-delay: 0.1s;">
+        <div class="menu-item">
+            <span class="mi-label">Login Password</span>
+            <div class="mi-val">******** <button class="btn-change" onclick="openModal()">Change</button></div>
+        </div>
+        <div class="menu-item">
+            <span class="mi-label">Email Verification</span>
+            <div class="mi-val">Enabled <i class="fas fa-check-circle" style="color:var(--green)"></i></div>
+        </div>
+        <div class="menu-item">
+            <span class="mi-label">Phone Number</span>
+            <div class="mi-val">Unbound <i class="fas fa-chevron-right" style="font-size:10px;"></i></div>
+        </div>
+    </div>
+
+    <div class="modal" id="pass-modal" onclick="if(event.target === this) closeModal()">
+        <div class="modal-box">
+            <div class="m-title">Change Password</div>
+            <input type="password" id="old-pass" class="m-inp" placeholder="Current Password">
+            <input type="password" id="new-pass-sec" class="m-inp" placeholder="New Password">
+            <button class="m-btn" onclick="changePassword()">Confirm Change</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        // --- TOAST HELPER ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const icon = toast.querySelector('i');
+
+            toastMsg.innerText = msg;
+            if(isError) {
+                icon.className = 'fas fa-exclamation-circle';
+                icon.style.color = 'var(--red)';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = 'var(--green)';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- MODAL LOGIC ---
+        function openModal() { 
+            const m = document.getElementById('pass-modal');
+            m.style.display = 'flex';
+            // Small delay to allow display:flex to apply before adding class for transition
+            setTimeout(() => m.classList.add('show'), 10);
+        }
+
+        function closeModal() {
+            const m = document.getElementById('pass-modal');
+            m.classList.remove('show');
+            setTimeout(() => m.style.display = 'none', 300);
+        }
+
+        async function changePassword() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass-sec').value;
+            const userId = localStorage.getItem('bitx_user_id');
+
+            if(!oldPass || !newPass) return showToast("Please fill all fields", true);
+            if(newPass.length < 6) return showToast("New password is too short", true);
+
+            try {
+                const res = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ userId, oldPass, newPass })
+                });
+                const data = await res.json();
+                
+                if(res.ok) {
+                    showToast("Password Updated Successfully!");
+                    closeModal();
+                    // Clear inputs
+                    document.getElementById('old-pass').value = '';
+                    document.getElementById('new-pass-sec').value = '';
+                } else {
+                    showToast(data.message, true);
+                }
+            } catch(e) { showToast("Connection Error", true); }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,644 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Virtual Trading</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        /* --- PREMIUM DARK THEME (PRESERVED) --- */
+        :root {
+            --bg-dark: #12161C;
+            --bg-card: #1E2329;
+            --text-light: #EAECEF;
+            --text-dim: #848E9C;
+            --primary: #FCD535;
+            --green: #0ECB81;
+            --red: #F6465D;
+            --border: #2B3139;
+            --modal-bg: #1E2329;
+        }
+
+        body { 
+            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg-dark); color: var(--text-light); padding-bottom: 20px; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* HEADER UPDATED */
+        .v-header { 
+            padding: 15px 20px; background: var(--bg-card); display: flex; 
+            align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); 
+        }
+        .v-header-left { display: flex; align-items: center; gap: 15px; }
+        .v-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .v-tag { font-size: 11px; background: var(--primary); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+        .back-icon { color: var(--text-dim); font-size: 18px; cursor: pointer; }
+        .logout-icon { color: var(--red); font-size: 18px; cursor: pointer; }
+
+        /* ACTIVATION SCREEN */
+        #activation-screen { 
+            display: none; padding: 40px 20px; text-align: center; height: 80vh; 
+            flex-direction: column; justify-content: center; align-items: center; 
+        }
+        .act-icon { font-size: 60px; color: var(--primary); margin-bottom: 20px; }
+        .act-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .act-desc { color: var(--text-dim); margin-bottom: 30px; line-height: 1.5; font-size: 14px; max-width: 300px; }
+        .act-btn { 
+            background: var(--primary); color: #000; border: none; padding: 15px 40px; 
+            border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; max-width: 300px; 
+        }
+
+        /* TRADING SCREEN */
+        #trading-screen { display: none; }
+        
+        /* BLUE BALANCE CARD */
+        .balance-card { 
+            margin: 15px; 
+            background: linear-gradient(135deg, #1a237e, #4e6ae6);
+            color: #ffffff;
+            padding: 25px 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            box-shadow: 0 4px 15px rgba(78, 106, 230, 0.3);
+        }
+        .bal-label { font-size: 12px; font-weight: 600; opacity: 0.8; letter-spacing: 0.5px; }
+        .bal-amount { font-size: 36px; font-weight: 800; margin: 5px 0; font-family: monospace; }
+        
+        .chart-container { height: 350px; background: var(--bg-dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+
+        /* CONTROLS */
+        .trade-box { 
+            background: var(--bg-card); padding: 20px; border-top-left-radius: 20px; 
+            border-top-right-radius: 20px; margin-top: -15px; position: relative; z-index: 10;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .lbl { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+        
+        .inp-box { 
+            display: flex; align-items: center; background: var(--bg-dark); 
+            border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+        }
+        .input-field { 
+            flex: 1; padding: 14px; border: none; background: none; color: var(--text-light); 
+            font-size: 16px; font-weight: 600; outline: none; -webkit-appearance: none;
+        }
+        .inp-suffix { padding: 0 15px; color: var(--text-dim); font-size: 12px; font-weight: 600; border-left: 1px solid var(--border); }
+        select.input-field { cursor: pointer; }
+        
+        .info-row { 
+            display: flex; justify-content: space-between; font-size: 13px; color: var(--text-dim); 
+            margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; 
+        }
+        .info-val { color: var(--text-light); font-weight: 700; font-family: monospace; }
+
+        .action-btns { display: flex; gap: 15px; }
+        .btn-trade { 
+            flex: 1; padding: 16px; border: none; border-radius: 8px; font-weight: 700; 
+            color: white; font-size: 16px; cursor: pointer; transition: transform 0.1s; 
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-trade:active { transform: scale(0.97); }
+        .btn-up { background: var(--green); color: #000; }
+        .btn-down { background: var(--red); }
+
+        /* COUNTDOWN OVERLAY */
+        #countdown-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .circle-container { position: relative; width: 220px; height: 220px; margin-bottom: 20px; }
+        .circle-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .circle-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+        .circle-progress { 
+            fill: none; stroke: var(--primary); stroke-width: 10; 
+            stroke-dasharray: 628; stroke-dashoffset: 0; 
+            transition: stroke-dashoffset 1s linear; 
+            stroke-linecap: round;
+        }
+        
+        .circle-text-wrapper {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .main-label { font-size: 36px; font-weight: 800; color: var(--text-light); line-height: 1; margin-bottom: 5px; }
+        .timer-sub { font-size: 16px; color: var(--text-dim); font-family: monospace; }
+        .wait-msg { font-size: 14px; color: var(--text-dim); margin-top: 15px; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* --- BEAUTIFUL MODALS v2.0 --- */
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 3000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;
+        }
+        .custom-modal-overlay.show { opacity: 1; }
+
+        .custom-modal {
+            background: linear-gradient(145deg, #1E2329, #171b21);
+            color: var(--text-light);
+            width: 90%; max-width: 360px;
+            border-radius: 24px; padding: 30px 25px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+        }
+        .custom-modal-overlay.show .custom-modal { transform: scale(1) translateY(0); opacity: 1; }
+
+        .cm-icon-box {
+            width: 70px; height: 70px; margin: 0 auto 20px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .win-theme .cm-icon-box { background: rgba(14, 203, 129, 0.15); color: var(--green); border-color: rgba(14, 203, 129, 0.3); box-shadow: 0 0 20px rgba(14,203,129,0.2); }
+        .loss-theme .cm-icon-box { background: rgba(246, 70, 93, 0.15); color: var(--red); border-color: rgba(246, 70, 93, 0.3); box-shadow: 0 0 20px rgba(246,70,93,0.2); }
+        .confirm-theme .cm-icon-box { background: rgba(252, 213, 53, 0.1); color: var(--primary); border-color: rgba(252, 213, 53, 0.2); }
+
+        .cm-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; text-align: center; letter-spacing: -0.5px; }
+        .cm-detail { font-size: 13px; color: var(--text-dim); margin-bottom: 25px; text-align: center; line-height: 1.5; }
+
+        .cm-data-container {
+            background: rgba(0,0,0,0.2); border-radius: 16px; padding: 15px;
+            margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .cm-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 14px; }
+        .cm-row:last-child { border-bottom: none; }
+        .cm-lbl { color: var(--text-dim); font-weight: 500; }
+        .cm-val { font-weight: 700; font-family: 'Roboto Mono', monospace; color: var(--text-light); }
+
+        .cm-btn-group { display: flex; gap: 12px; margin-top: 10px; }
+        .cm-btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; transition: transform 0.1s; }
+        .cm-btn:active { transform: scale(0.96); }
+        .cm-btn-primary { background: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(252, 213, 53, 0.2); }
+        .cm-btn-cancel { background: transparent; color: var(--text-dim); border: 1px solid rgba(255,255,255,0.1); }
+        .cm-btn-danger { background: var(--red); color: white; box-shadow: 0 4px 15px rgba(246, 70, 93, 0.3); }
+
+        /* TOAST */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #222; color: #fff; padding: 12px 24px;
+            border-radius: 30px; border: 1px solid #333;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 4000;
+            display: flex; align-items: center; gap: 10px;
+            opacity: 0; transition: opacity 0.3s, top 0.3s; pointer-events: none;
+            font-size: 14px; font-weight: 500;
+        }
+        .toast.show { opacity: 1; top: 30px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <div id="confirm-modal-overlay" class="custom-modal-overlay">
+        <div class="custom-modal confirm-theme">
+            <div class="cm-icon-box">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <div class="cm-title">Confirm Trade</div>
+            <div class="cm-detail">Please review your trade details before proceeding.</div>
+            
+            <div class="cm-data-container">
+                <div class="cm-row">
+                    <span class="cm-lbl">Direction</span>
+                    <span class="cm-val" id="cm-type">BULLISH</span>
+                </div>
+                <div class="cm-row">
+                    <span class="cm-lbl">Investment</span>
+                    <span class="cm-val" id="cm-amount">0.00 V-USDT</span>
+                </div>
+                <div class="cm-row">
+                    <span class="cm-lbl">Duration</span>
+                    <span class="cm-val" id="cm-duration">60s</span>
+                </div>
+                <div class="cm-row">
+                    <span class="cm-lbl">Potential Profit</span>
+                    <span class="cm-val" id="cm-profit" style="color:var(--green)">+30%</span>
+                </div>
+            </div>
+
+            <div class="cm-btn-group">
+                <button class="cm-btn cm-btn-cancel" onclick="hideConfirmModal(false)">Cancel</button>
+                <button class="cm-btn cm-btn-primary" onclick="hideConfirmModal(true)">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-modal-overlay" class="custom-modal-overlay">
+        <div class="custom-modal" id="result-modal-content">
+            <div class="cm-icon-box">
+                <i class="fas fa-check" id="res-icon"></i>
+            </div>
+            <div class="cm-title" id="res-title">Success</div>
+            <div class="cm-detail" id="res-msg">Trade completed successfully.</div>
+            
+            <div class="cm-data-container">
+                <div class="cm-row">
+                    <span class="cm-lbl">Closing PNL</span>
+                    <span class="cm-val" id="res-pnl">+0.00 V-USDT</span>
+                </div>
+            </div>
+            
+            <div class="cm-btn-group">
+                <button class="cm-btn cm-btn-primary" onclick="closeResultModal()">Continue Trading</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="logout-modal-overlay" class="custom-modal-overlay">
+        <div class="custom-modal loss-theme"> <div class="cm-icon-box">
+                <i class="fas fa-power-off"></i>
+            </div>
+            <div class="cm-title">Exit Trading?</div>
+            <div class="cm-detail">Guest sessions will be permanently deleted. Registered sessions will reset.</div>
+            
+            <div class="cm-btn-group">
+                <button class="cm-btn cm-btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+                <button class="cm-btn cm-btn-danger" onclick="confirmLogout()">Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="v-header">
+        <div class="v-header-left">
+            <i class="fas fa-chevron-left back-icon" onclick="window.location.href='mobile.html'"></i>
+            <div class="v-title"><i class="fas fa-robot" style="color:var(--primary)"></i> Virtual <span class="v-tag">DEMO</span></div>
+        </div>
+        <i class="fas fa-power-off logout-icon" onclick="openLogoutModal()" title="Exit / Reset"></i>
+    </div>
+
+    <div id="activation-screen">
+        <i class="fas fa-coins act-icon"></i>
+        <div class="act-title">Practice Trading</div>
+        <div class="act-desc">Open a virtual account instantly and get <b>10,000 V-USDT</b> to practice your strategies risk-free.</div>
+        <button class="act-btn" onclick="activateAccount()">Open Virtual Account</button>
+    </div>
+
+    <div id="trading-screen">
+        <div class="balance-card">
+            <div class="bal-label">VIRTUAL BALANCE (V-USDT)</div>
+            <div class="bal-amount" id="v-balance">0.00</div>
+            <div style="font-size:11px; font-weight:600; opacity:0.7;">DEMO FUNDS</div>
+        </div>
+
+        <div class="chart-container" id="chart_div"></div>
+
+        <div class="trade-box">
+            
+            <div class="input-group">
+                <label class="lbl">Trading Duration</label>
+                <div class="inp-box">
+                    <select id="time-select" class="input-field" onchange="selectTime(this.value)">
+                        </select>
+                    <span class="inp-suffix"><i class="fas fa-caret-down"></i></span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="lbl">Investment Amount</label>
+                <div class="inp-box">
+                    <input type="number" id="invest-amount" class="input-field" placeholder="Min 100" value="100">
+                    <span class="inp-suffix">V-USDT</span>
+                </div>
+            </div>
+            
+            <div class="info-row">
+                <span>Profit Rate: <b id="profit-display" class="info-val" style="color:var(--green)">--%</b></span>
+                <span>Est. Return: <b id="return-display" class="info-val">$0.00</b></span>
+            </div>
+
+            <div class="action-btns">
+                <button class="btn-trade btn-up" onclick="startTradeSequence('up')">
+                    <i class="fas fa-arrow-up"></i> BULLISH
+                </button>
+                <button class="btn-trade btn-down" onclick="startTradeSequence('down')">
+                    <i class="fas fa-arrow-down"></i> BEARISH
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="countdown-overlay">
+        <div class="circle-container">
+            <svg class="circle-svg">
+                <circle class="circle-bg" cx="110" cy="110" r="100"></circle>
+                <circle class="circle-progress" id="progress-ring" cx="110" cy="110" r="100"></circle>
+            </svg>
+            <div class="circle-text-wrapper">
+                <div class="main-label" id="main-countdown-label">60s</div>
+                <div class="timer-sub" id="sub-timer">00:00</div>
+            </div>
+        </div>
+        <div class="wait-msg">Simulating Market Data...</div>
+        <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">Do not close this window</div>
+    </div>
+
+    <script>
+        const API_URL = '/api'; 
+        
+        // --- 1. SMART USER ID HANDLING ---
+        let currentUserId = localStorage.getItem('bitx_user_id');
+        let isGuestMode = false;
+
+        if (!currentUserId) {
+            isGuestMode = true;
+            let guestId = localStorage.getItem('bitx_guest_id');
+            if (!guestId) {
+                guestId = 'guest_' + Math.floor(Math.random() * 1000000000);
+                localStorage.setItem('bitx_guest_id', guestId);
+            }
+            currentUserId = guestId;
+        }
+
+        const TRADE_OPTIONS = [
+            { label: '60s', seconds: 60, profit: 15, simulate: 60 },
+            { label: '120s', seconds: 120, profit: 30, simulate: 120 },
+            { label: '180s', seconds: 180, profit: 45, simulate: 180 },
+            { label: '1 Day', seconds: 86400, profit: 75, simulate: 60 }, 
+            { label: '3 Days', seconds: 259200, profit: 100, simulate: 180 },
+            { label: '7 Days', seconds: 604800, profit: 120, simulate: 420 }
+        ];
+
+        let selectedOption = TRADE_OPTIONS[0]; 
+
+        // --- TOAST HELPER ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const icon = toast.querySelector('i');
+
+            toastMsg.innerText = msg;
+            if(isError) {
+                icon.className = 'fas fa-exclamation-circle';
+                icon.style.color = 'var(--red)';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = 'var(--green)';
+            }
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        // --- NEW: LOGOUT MODAL LOGIC ---
+        function openLogoutModal() {
+            const overlay = document.getElementById('logout-modal-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('show'), 10);
+        }
+
+        function closeLogoutModal() {
+            const overlay = document.getElementById('logout-modal-overlay');
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.style.display = 'none', 300);
+        }
+
+        async function confirmLogout() {
+            try {
+                await fetch(`${API_URL}/virtual/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId })
+                });
+                
+                // Clear local guest ID if it exists
+                localStorage.removeItem('bitx_guest_id');
+                
+                // Redirect
+                window.location.href = 'mobile.html';
+            } catch(e) {
+                // Fallback redirect
+                window.location.href = 'mobile.html';
+            }
+        }
+
+        // --- MODAL HELPERS ---
+        let confirmResolver = null;
+
+        function showConfirmModal(type, amount, duration, profit) {
+            document.getElementById('cm-type').innerText = type;
+            document.getElementById('cm-type').style.color = type === 'BULLISH' ? 'var(--green)' : 'var(--red)';
+            document.getElementById('cm-amount').innerText = `${amount.toFixed(2)} V-USDT`;
+            document.getElementById('cm-duration').innerText = duration;
+            document.getElementById('cm-profit').innerText = `+${profit}%`;
+            
+            const overlay = document.getElementById('confirm-modal-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('show'), 10);
+
+            return new Promise((resolve) => { confirmResolver = resolve; });
+        }
+
+        function hideConfirmModal(confirmed) {
+            const overlay = document.getElementById('confirm-modal-overlay');
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.style.display = 'none', 300);
+            if (confirmResolver) confirmResolver(confirmed);
+        }
+
+        function showResultModal(isWin, profitAmount) {
+            const overlay = document.getElementById('result-modal-overlay');
+            const content = document.getElementById('result-modal-content');
+            const icon = document.getElementById('res-icon');
+            const title = document.getElementById('res-title');
+            const msg = document.getElementById('res-msg');
+            const pnl = document.getElementById('res-pnl');
+
+            content.classList.remove('win-theme', 'loss-theme');
+            content.classList.add(isWin ? 'win-theme' : 'loss-theme');
+
+            icon.className = isWin ? 'fas fa-check' : 'fas fa-times';
+            title.innerText = isWin ? 'Success' : 'Settled';
+            msg.innerText = isWin ? 'Congratulations! Your prediction was correct.' : 'Market moved against your prediction.';
+            pnl.innerText = (isWin ? '+' : '-') + Math.abs(profitAmount).toFixed(2) + ' V-USDT';
+
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('show'), 10);
+        }
+
+        function closeResultModal() {
+            const overlay = document.getElementById('result-modal-overlay');
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.style.display = 'none', 300);
+        }
+
+
+        // --- INIT ---
+        window.addEventListener('load', async () => {
+            if(isGuestMode) {
+                document.querySelector('.v-tag').innerText = "GUEST MODE";
+                document.querySelector('.v-tag').style.background = "#FF9800"; 
+            }
+            await checkStatus(); 
+            initChart(); 
+            renderTimeDropdown();
+            updateCalculations();
+        });
+
+        function renderTimeDropdown() {
+            const select = document.getElementById('time-select');
+            select.innerHTML = TRADE_OPTIONS.map((opt, index) => `
+                <option value="${index}">${opt.label} (Profit: ${opt.profit}%)</option>
+            `).join('');
+        }
+
+        window.selectTime = (index) => {
+            selectedOption = TRADE_OPTIONS[index];
+            updateCalculations();
+        };
+
+        function updateCalculations() {
+            const amount = parseFloat(document.getElementById('invest-amount').value) || 0;
+            const profitVal = amount * (selectedOption.profit / 100);
+            document.getElementById('profit-display').innerText = `${selectedOption.profit}%`;
+            document.getElementById('return-display').innerText = `$${(amount + profitVal).toFixed(2)}`;
+        }
+
+        document.getElementById('invest-amount').addEventListener('input', updateCalculations);
+
+        // --- MAIN LOGIC ---
+        window.startTradeSequence = async (direction) => {
+            const amount = parseFloat(document.getElementById('invest-amount').value);
+            if (!amount || amount < 100) return showToast("Minimum investment is 100 V-USDT", true);
+            
+            const tradeType = direction === 'up' ? 'BULLISH' : 'BEARISH';
+            const confirmed = await showConfirmModal(tradeType, amount, selectedOption.label, selectedOption.profit);
+            if(!confirmed) return;
+
+            const overlay = document.getElementById('countdown-overlay');
+            const progressRing = document.getElementById('progress-ring');
+            const mainLabel = document.getElementById('main-countdown-label');
+            const subTimer = document.getElementById('sub-timer');
+            
+            overlay.style.display = 'flex';
+            
+            let timeLeft = selectedOption.simulate; 
+            const totalTime = selectedOption.simulate;
+            const circumference = 2 * Math.PI * 100; 
+            
+            progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
+            progressRing.style.strokeDashoffset = 0;
+            mainLabel.innerText = selectedOption.label;
+            subTimer.innerText = formatTime(timeLeft);
+
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                subTimer.innerText = formatTime(timeLeft);
+                const offset = circumference - (timeLeft / totalTime) * circumference;
+                progressRing.style.strokeDashoffset = offset;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishTrade(direction, amount); 
+                }
+            }, 1000);
+        };
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        async function finishTrade(direction, amount) {
+            const overlay = document.getElementById('countdown-overlay');
+            const mainLabel = document.getElementById('main-countdown-label');
+            const subTimer = document.getElementById('sub-timer');
+            
+            mainLabel.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
+            subTimer.innerText = "Settling...";
+
+            try {
+                const res = await fetch(`${API_URL}/virtual/trade`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId, investment: amount, profitPercent: selectedOption.profit })
+                });
+                
+                const data = await res.json();
+                overlay.style.display = 'none';
+                showResultModal(data.isWin, data.profitAmount);
+                document.getElementById('v-balance').innerText = data.newBalance.toFixed(2);
+            } catch (e) {
+                overlay.style.display = 'none';
+                showToast("Connection Error during settlement", true);
+            }
+        }
+
+        // 🔥 FIXED: CHECK STATUS (Safe Version)
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API_URL}/user/${currentUserId}`);
+                if (!res.ok) throw new Error("User fetch failed");
+                const user = await res.json();
+                if (user && user.virtual && user.virtual.isCreated) {
+                    document.getElementById('activation-screen').style.display = 'none';
+                    document.getElementById('trading-screen').style.display = 'block';
+                    document.getElementById('v-balance').innerText = user.virtual.balance.toFixed(2);
+                } else {
+                    document.getElementById('activation-screen').style.display = 'flex';
+                    document.getElementById('trading-screen').style.display = 'none';
+                }
+            } catch (e) { 
+                console.error("Status Check Error:", e);
+                document.getElementById('activation-screen').style.display = 'flex';
+                document.getElementById('trading-screen').style.display = 'none';
+            }
+        }
+
+        async function activateAccount() {
+            try {
+                const res = await fetch(`${API_URL}/virtual/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast("Success! Received 10,000 V-USDT");
+                    checkStatus(); 
+                } else {
+                    showToast(data.message || "Activation failed", true);
+                }
+            } catch (e) { showToast("Error activating account", true); }
+        }
+
+        function initChart() {
+            new TradingView.widget({
+                "width": "100%", 
+                "height": 350, 
+                "symbol": "COINBASE:BTCUSD", 
+                "interval": "1", 
+                "timezone": "Etc/UTC", 
+                "theme": "dark", 
+                "style": "1",
+                "locale": "en", 
+                "toolbar_bg": "#12161C", 
+                "enable_publishing": false,
+                "hide_top_toolbar": true, 
+                "save_image": false, 
+                "container_id": "chart_div",
+                "overrides": {
+                    "paneProperties.background": "#12161C",
+                    "scalesProperties.textColor": "#848E9C"
+                }
+            });
+        }
+    </script>
+</body>
+</html>

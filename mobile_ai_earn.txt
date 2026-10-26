@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>if(!localStorage.getItem('bitx_user_id')) window.location.href = 'mobile.html';</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | AI Earn</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg: #131722; --card: #1e222d; --text: #fff; --sub: #999; --primary: #2962ff; --green: #00c853; --gold: #ffb300; --border: #2a2e39; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 20px; }
+        
+        .header { padding: 15px; border-bottom: 1px solid var(--border); font-size: 18px; font-weight: 700; display: flex; align-items: center; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+        .back-btn { margin-right: 15px; cursor: pointer; color: var(--sub); }
+
+        .hero { padding: 30px 20px; text-align: center; background: radial-gradient(circle at center, #2a2e39 0%, #131722 100%); }
+        .hero-title { font-size: 14px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; }
+        .hero-val { font-size: 32px; font-weight: 700; margin: 10px 0; color: var(--primary); font-family: monospace; }
+        .hero-desc { font-size: 12px; color: var(--sub); max-width: 250px; margin: 0 auto; line-height: 1.5; }
+
+        .prod-list { padding: 15px; }
+        .prod-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); position: relative; overflow: hidden; animation: fadeIn 0.5s; }
+        .tag { position: absolute; top: 0; right: 0; background: var(--green); color: #000; font-size: 10px; font-weight: 700; padding: 4px 8px; border-bottom-left-radius: 8px; }
+        .tag.hot { background: var(--gold); }
+        
+        .pc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .pc-icon { width: 32px; height: 32px; border-radius: 50%; }
+        .pc-title { font-size: 16px; font-weight: 700; }
+        
+        .pc-stats { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .stat-box h4 { margin: 0 0 5px 0; font-size: 18px; color: var(--green); }
+        .stat-box p { margin: 0; font-size: 11px; color: var(--sub); }
+
+        .btn-sub { width: 100%; background: var(--primary); border: none; padding: 12px; border-radius: 6px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-sub:active { transform: scale(0.98); }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        /* TOAST */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #222; border: 1px solid #444; color: white; padding: 12px 24px; border-radius: 20px; font-size: 14px; display: none; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <i class="fas fa-chevron-left back-btn" onclick="window.history.back()"></i>
+        AI Smart Earn
+    </div>
+
+    <div class="hero">
+        <div class="hero-title">Total Value Locked</div>
+        <div class="hero-val" id="tvl-display">$12,450,293</div>
+        <div class="hero-desc">AI-driven arbitrage strategies using live market data to maximize yield.</div>
+    </div>
+
+    <div class="prod-list" id="earn-list">
+        <div style="text-align:center; padding:40px; color:#555;">
+            <i class="fas fa-circle-notch fa-spin"></i><br><br>Analyzing Market Data...
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Subscription Successful!</div>
+
+    <script>
+        // Configuration for Coin Images
+        const coinImages = {
+            'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            'BNB': 'https://assets.coingecko.com/coins/images/825/small/binance-coin-logo.png',
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'TRX': 'https://assets.coingecko.com/coins/images/1094/small/tron-logo.png'
+        };
+
+        window.onload = function() {
+            fetchLiveEarnData();
+            animateTVL();
+        };
+
+        async function fetchLiveEarnData() {
+            try {
+                // 1. Fetch Real Market Prices from your Server
+                const res = await fetch('/api/market-data'); 
+                const data = await res.json();
+                
+                const container = document.getElementById('earn-list');
+                container.innerHTML = '';
+
+                // 2. Always add USDT (Stable)
+                addCard(container, 'USDT', 'Smart Arbitrage', '12.50%', '7 Days', true);
+
+                // 3. Filter for major coins and generate dynamic cards
+                const targetCoins = ['BTC', 'ETH', 'SOL', 'BNB', 'ADA'];
+                
+                targetCoins.forEach(sym => {
+                    const coinData = data.find(c => c.symbol === `${sym}USDT`);
+                    if(coinData) {
+                        // Generate a "Real-looking" APR based on price hash
+                        const price = parseFloat(coinData.price);
+                        // Logic: Higher price often correlates to lower volatility yield, but we fake it for demo
+                        const dynamicAPR = ((price % 15) + 3).toFixed(2) + '%'; 
+                        
+                        addCard(container, sym, 'Trend Grid', dynamicAPR, 'Flexible', false);
+                    }
+                });
+
+            } catch (e) {
+                console.error("Error loading earn data", e);
+                document.getElementById('earn-list').innerHTML = '<div style="text-align:center; color:#555;">Market data unavailable</div>';
+            }
+        }
+
+        function addCard(container, symbol, strategyName, apr, lock, isHot) {
+            const img = coinImages[symbol] || coinImages['BTC'];
+            const tagHtml = isHot ? '<div class="tag hot">HOT</div>' : '<div class="tag">AI AUTO</div>';
+            
+            const html = `
+            <div class="prod-card">
+                ${tagHtml}
+                <div class="pc-head">
+                    <img src="${img}" class="pc-icon"> 
+                    <span class="pc-title">${symbol} ${strategyName}</span>
+                </div>
+                <div class="pc-stats">
+                    <div class="stat-box">
+                        <h4>${apr}</h4>
+                        <p>Est. APR</p>
+                    </div>
+                    <div class="stat-box" style="text-align:right">
+                        <h4 style="color:#fff">${lock}</h4>
+                        <p>Lock Period</p>
+                    </div>
+                </div>
+                <button class="btn-sub" onclick="subscribe('${symbol} ${strategyName}')">Subscribe</button>
+            </div>`;
+            
+            container.innerHTML += html;
+        }
+
+        function subscribe(name) {
+            const t = document.getElementById('toast');
+            t.innerText = `Subscribed to ${name}`;
+            t.style.display = 'block';
+            
+            // Optional: You could add a fetch call here to save subscription to server
+            // fetch('/api/earn/subscribe', { method: 'POST', ... })
+
+            setTimeout(() => t.style.display = 'none', 2000);
+        }
+
+        function animateTVL() {
+            const el = document.getElementById('tvl-display');
+            let val = 12450293;
+            
+            setInterval(() => {
+                // Simulate live updates
+                const change = Math.floor(Math.random() * 500) - 200; // Random + or -
+                val += change;
+                el.innerText = '$' + val.toLocaleString();
+                
+                // Color flash effect
+                el.style.color = change > 0 ? 'var(--green)' : (change < 0 ? 'var(--primary)' : 'var(--primary)');
+                setTimeout(() => el.style.color = 'var(--primary)', 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

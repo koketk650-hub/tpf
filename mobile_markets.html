@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Markets</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- MOBILE STYLES ONLY (DARK & YELLOW THEME) --- */
+        :root {
+            --bg-mobile: #0b0e11; 
+            --bg-panel: #181a20; 
+            --bg-hover: #2b3139; 
+            --primary-yellow: #f3ba2f; 
+            --icon-gray: #848e9c;
+            --text-light: #eaecef;
+            --text-muted: #848e9c;
+            --success-green: #0ecb81;
+            --danger-red: #f6465d;
+            --border-dark: #2b3139;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-mobile); color: var(--text-light); padding-bottom: 70px; overflow-x: hidden; }
+        a { text-decoration: none; color: inherit; }
+
+        /* HEADER & NOTIFICATIONS */
+        .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--bg-panel); border-bottom: 1px solid var(--border-dark); position: sticky; top: 0; z-index: 100; }
+        .page-title { font-size: 18px; font-weight: 700; color: var(--text-light); }
+        .header-actions { display: flex; gap: 18px; align-items: center; }
+        .search-icon { font-size: 18px; color: var(--text-muted); cursor: pointer; }
+
+        .notification-wrapper { position: relative; cursor: pointer; color: var(--text-light); font-size: 20px; display: flex; align-items: center; }
+        .nav-badge { position: absolute; top: -5px; right: -5px; background: var(--danger-red); color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; display: none; }
+        
+        .notification-dropdown { position: absolute; top: 45px; right: -5px; width: 280px; background: var(--bg-panel); border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1000; border: 1px solid var(--border-dark); }
+        .nd-header { padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-dark); color: var(--text-light); }
+        .nd-list { max-height: 300px; overflow-y: auto; }
+        .nd-item { padding: 15px; border-bottom: 1px solid var(--border-dark); }
+        .nd-item.unread { border-left: 3px solid var(--primary-yellow); background: rgba(243, 186, 47, 0.05); }
+        .nd-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--text-light); }
+        .nd-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .nd-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        /* TABS */
+        .mm-tabs { display: flex; padding: 0 15px; background: var(--bg-panel); border-bottom: 1px solid var(--border-dark); gap: 25px; margin-bottom: 5px; }
+        .mm-tab { padding: 15px 0; font-size: 15px; color: var(--text-muted); font-weight: 500; position: relative; cursor: pointer; }
+        .mm-tab.active { color: var(--text-light); font-weight: bold; }
+        .mm-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--primary-yellow); border-radius: 2px; }
+
+        /* LIST HEADERS */
+        .list-header { display: flex; padding: 10px 15px; font-size: 12px; color: var(--text-muted); background: var(--bg-mobile); }
+        .col-name { flex: 1; }
+        .col-price { flex: 1; text-align: right; margin-right: 15px; }
+        .col-change { width: 70px; text-align: right; }
+
+        /* MARKET LIST */
+        .market-list { background: var(--bg-panel); padding: 0 15px; }
+        .mm-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border-dark); cursor: pointer; transition: background 0.2s; }
+        .mm-row:active { background: var(--bg-hover); }
+        .mm-left { display: flex; align-items: center; gap: 10px; }
+        .mm-icon { width: 32px; height: 32px; border-radius: 50%; }
+        .mm-name h4 { font-size: 15px; margin-bottom: 2px; color: var(--text-light); }
+        .mm-name span { font-size: 11px; color: var(--text-muted); }
+        .mm-price { text-align: right; margin-left: auto; margin-right: 15px; font-weight: 600; font-size: 15px; color: var(--text-light); transition: color 0.3s; }
+        .mm-btn { width: 75px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: white; font-size: 13px; font-weight: bold; }
+        .bg-green { background: var(--success-green); }
+        .bg-red { background: var(--danger-red); }
+
+        /* NEWS SECTION */
+        .news-section { margin-top: 10px; background: var(--bg-panel); padding: 15px; border-top: 1px solid var(--border-dark); }
+        .news-header { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; color: var(--text-light); }
+        .refresh-btn { font-size: 12px; color: var(--primary-yellow); cursor: pointer; font-weight: 600; }
+        
+        .news-card { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid var(--border-dark); cursor: pointer; transition: background 0.2s; }
+        .news-card:active { background: var(--bg-hover); }
+        .news-img { width: 80px; height: 60px; border-radius: 6px; background: #333; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-dark); }
+        .news-content { flex: 1; min-width: 0; }
+        .news-title { font-size: 14px; font-weight: 600; line-height: 1.4; margin-bottom: 5px; color: var(--text-light); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; }
+        .news-source { color: var(--primary-yellow); font-weight: 500; }
+
+        /* --- NATIVE NEWS READER MODAL (DARK THEME) --- */
+        #news-viewer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-mobile); z-index: 5000; display: none; flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .viewer-header {
+            height: 60px; background: var(--bg-panel); border-bottom: 1px solid var(--border-dark); display: flex;
+            align-items: center; justify-content: space-between; padding: 0 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); flex-shrink: 0;
+        }
+        .viewer-title { font-weight: 700; font-size: 15px; color: var(--text-light); }
+        .viewer-close { font-size: 16px; color: var(--text-muted); cursor: pointer; padding: 5px; font-weight: 600; }
+        
+        /* The Reading Area */
+        #viewer-content { 
+            flex: 1; overflow-y: auto; padding: 20px; line-height: 1.6; font-size: 16px; color: var(--text-light); 
+        }
+        #viewer-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border-dark); }
+        #viewer-content h1 { font-size: 22px; margin-bottom: 10px; line-height: 1.3; }
+        #viewer-content p { margin-bottom: 15px; color: #d1d5db; }
+        #viewer-content a { color: var(--primary-yellow); text-decoration: underline; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; 
+            background: var(--bg-panel); border-top: 1px solid var(--border-dark); z-index: 1000;
+            display: flex; justify-content: space-between; padding: 0 10px; padding-bottom: env(safe-area-inset-bottom);
+        }
+        .b-nav-item { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted); text-decoration: none; font-size: 11px; font-weight: 500; cursor: pointer;
+            transition: color 0.3s;
+        }
+        .b-nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .b-nav-item.active { color: var(--primary-yellow); }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-header">
+        <div class="page-title">Markets</div>
+        <div class="header-actions">
+            <i class="fas fa-search search-icon"></i>
+            
+            <div class="notification-wrapper" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                <div class="nav-badge" id="nav-badge">0</div>
+                
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <div class="nd-header">Notifications</div>
+                    <div id="notification-list" class="nd-list">
+                        <div class="nd-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mm-tabs">
+        <div class="mm-tab">Favorites</div>
+        <div class="mm-tab active">Crypto</div>
+        <div class="mm-tab">Spot</div>
+        <div class="mm-tab">Futures</div>
+    </div>
+
+    <div class="list-header">
+        <span class="col-name">Name / Vol</span>
+        <span class="col-price">Last Price</span>
+        <span class="col-change">Change</span>
+    </div>
+
+    <div class="market-list">
+        <div class="mm-row" onclick="window.location.href='mobile_exchange.html?symbol=BTC'">
+            <div class="mm-left"><img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" class="mm-icon"><div class="mm-name"><h4>BTC</h4><span>/USDT</span></div></div>
+            <div class="mm-price" id="price-BTC">Loading...</div><div class="mm-btn" id="change-BTC">--%</div>
+        </div>
+        <div class="mm-row" onclick="window.location.href='mobile_exchange.html?symbol=ETH'">
+            <div class="mm-left"><img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" class="mm-icon"><div class="mm-name"><h4>ETH</h4><span>/USDT</span></div></div>
+            <div class="mm-price" id="price-ETH">Loading...</div><div class="mm-btn" id="change-ETH">--%</div>
+        </div>
+        <div class="mm-row" onclick="window.location.href='mobile_exchange.html?symbol=SOL'">
+            <div class="mm-left"><img src="https://assets.coingecko.com/coins/images/4128/small/solana.png" class="mm-icon"><div class="mm-name"><h4>SOL</h4><span>/USDT</span></div></div>
+            <div class="mm-price" id="price-SOL">Loading...</div><div class="mm-btn" id="change-SOL">--%</div>
+        </div>
+    </div>
+
+    <div class="news-section">
+        <div class="news-header">
+            Crypto News <span class="refresh-btn" onclick="fetchNews()"><i class="fas fa-sync-alt"></i> Refresh</span>
+        </div>
+        <div id="news-container">
+            <div style="text-align:center; color:var(--text-muted); padding:20px;">Loading news...</div>
+        </div>
+    </div>
+
+    <div id="news-viewer">
+        <div class="viewer-header">
+            <div class="viewer-close" onclick="closeNews()"><i class="fas fa-arrow-left"></i> Back</div>
+            <div class="viewer-title">Reading Mode</div>
+            <div style="width:50px"></div>
+        </div>
+        <div id="viewer-content"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="mobile.html" class="b-nav-item"><i class="fas fa-home"></i>Home</a>
+        <a href="mobile_market.html" class="b-nav-item active"><i class="fas fa-chart-bar"></i>Markets</a>
+        <a href="mobile_exchange.html" class="b-nav-item"><i class="fas fa-exchange-alt"></i>Trade</a>
+        <a href="mobile_contract.html" class="b-nav-item"><i class="fas fa-file-contract"></i>Contracts</a>
+        <a href="mobile_assets.html" class="b-nav-item"><i class="fas fa-wallet"></i>Balance</a>
+    </div>
+
+    <script>
+        // --- 0. NOTIFICATION LOGIC ---
+        async function fetchNotifications() {
+            const userId = localStorage.getItem('bitx_user_id');
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/notifications/${userId}`); 
+                if (!response.ok) return;
+                const notifications = await response.json();
+                
+                const badge = document.getElementById('nav-badge');
+                const list = document.getElementById('notification-list');
+                
+                const unread = notifications.filter(n => !n.isRead);
+                
+                if (unread.length > 0) {
+                    badge.innerText = unread.length;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="nd-empty">No new notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = notifications.map(n => `
+                    <div class="nd-item ${n.isRead ? '' : 'unread'}">
+                        <div class="nd-title">${n.title}</div>
+                        <div class="nd-msg">${n.message}</div>
+                        <div style="font-size:10px; color:#848e9c; margin-top:5px;">
+                            ${new Date(n.createdAt).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("Failed to load notifications:", error);
+            }
+        }
+
+        async function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            const isShowing = dropdown.style.display === 'flex';
+            
+            if (isShowing) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'flex';
+                const userId = localStorage.getItem('bitx_user_id');
+                if (userId) {
+                    fetch(`/api/notifications/${userId}/read`, { method: 'POST' })
+                        .then(() => fetchNotifications()); 
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notification-dropdown').style.display = 'none';
+            }
+        });
+
+
+        // Global storage for news content
+        let cachedNews = [];
+
+        // --- 1. LIVE PRICES ---
+        async function updateLivePrices() {
+            const symbols = ['BTC', 'ETH', 'SOL'];
+            const pairs = JSON.stringify(symbols.map(s => s + 'USDT'));
+            try {
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${pairs}`);
+                const data = await res.json();
+                data.forEach(ticker => {
+                    const sym = ticker.symbol.replace('USDT', '');
+                    const priceEl = document.getElementById(`price-${sym}`);
+                    if(priceEl) priceEl.innerText = parseFloat(ticker.lastPrice).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    const changeEl = document.getElementById(`change-${sym}`);
+                    if(changeEl) {
+                        const chg = parseFloat(ticker.priceChangePercent);
+                        changeEl.innerText = (chg > 0 ? '+' : '') + chg.toFixed(2) + '%';
+                        changeEl.className = `mm-btn ${chg >= 0 ? 'bg-green' : 'bg-red'}`;
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        // --- 2. NEWS FETCHING (RSS TO JSON - SUPPORTING SOURCES ONLY) ---
+        async function fetchNews() {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Updating News...</div>';
+            
+            try {
+                // Using RSS2JSON to get clean content that DOES NOT block iframes
+                // Source: Cointelegraph (Supports Embedding)
+                const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://cointelegraph.com/rss');
+                const data = await res.json();
+                
+                if (data.status === 'ok' && data.items.length > 0) {
+                    cachedNews = data.items; // Store for reading mode
+                    renderNews(cachedNews);
+                } else {
+                    throw new Error("News load failed");
+                }
+            } catch (e) {
+                console.warn(e);
+                loadBackupNews();
+            }
+        }
+
+        function renderNews(articles) {
+            const container = document.getElementById('news-container');
+            // Show up to 10 items
+            container.innerHTML = articles.slice(0, 10).map((item, index) => `
+                <div class="news-card" onclick="openReader(${index})">
+                    <img src="${item.thumbnail || 'https://via.placeholder.com/80/2b3139/eaecef?text=News'}" class="news-img" onerror="this.src='https://via.placeholder.com/80/2b3139/eaecef?text=News'">
+                    <div class="news-content">
+                        <div class="news-title">${item.title}</div>
+                        <div class="news-meta">
+                            <span class="news-source">CoinTelegraph</span>
+                            <span>• ${item.pubDate.split(' ')[1].substring(0,5)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- 3. BACKUP (If API Fails) ---
+        function loadBackupNews() {
+            // These are hardcoded safe items
+            cachedNews = [
+                { title: "Bitcoin stabilizes above $95,000 as institutional demand grows", content: "<p>Bitcoin continues to show strength as institutional accumulation accelerates across major global markets.</p>", thumbnail: "", pubDate: "2025-12-21 10:00:00" },
+                { title: "Ethereum upgrade 'Pectra' scheduled for Q1 2026", content: "<p>Developers have confirmed the next upgrade, targeting massive improvements to scalability and wallet user experience.</p>", thumbnail: "", pubDate: "2025-12-21 09:30:00" },
+                { title: "Solana handles record transaction volume amid DeFi surge", content: "<p>Solana network activity hits new all-time highs as decentralized finance applications experience a massive resurgence.</p>", thumbnail: "", pubDate: "2025-12-21 08:15:00" },
+                { title: "Global crypto regulations tighten in EU markets", content: "<p>New MiCA regulations are coming into full effect, forcing major stablecoin issuers to adapt rapidly.</p>", thumbnail: "", pubDate: "2025-12-21 07:00:00" },
+                { title: "Institutions look towards Tokenization of Real World Assets", content: "<p>Major banks are beginning to tokenize treasuries and funds on public blockchains at an unprecedented rate.</p>", thumbnail: "", pubDate: "2025-12-20 18:00:00" }
+            ];
+            renderNews(cachedNews);
+        }
+
+        // --- 4. READER LOGIC (NATIVE - NO BLOCKING) ---
+        function openReader(index) {
+            const article = cachedNews[index];
+            const viewer = document.getElementById('news-viewer');
+            const content = document.getElementById('viewer-content');
+            
+            // Build the Reader View manually (Dark Theme Adapted)
+            content.innerHTML = `
+                <h1>${article.title}</h1>
+                <div style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">
+                    ${article.pubDate}
+                </div>
+                ${article.thumbnail ? `<img src="${article.thumbnail}" style="width:100%; border-radius:10px; margin-bottom:20px;">` : ''}
+                <div style="font-size:16px; line-height:1.6;">
+                    ${article.content || article.description} 
+                </div>
+                <div style="margin-top:40px; text-align:center;">
+                    <button onclick="window.open('${article.link}', '_blank')" style="padding:12px 25px; background:var(--primary-yellow); border:none; border-radius:25px; color:#000; font-weight:bold; font-size:14px; box-shadow: 0 4px 10px rgba(243, 186, 47, 0.2);">Read Original Article</button>
+                </div>
+            `;
+            
+            viewer.style.display = 'flex';
+        }
+
+        function closeNews() {
+            document.getElementById('news-viewer').style.display = 'none';
+        }
+
+        // INIT
+        window.onload = () => {
+            fetchNotifications(); // Fetch alerts immediately
+            setInterval(fetchNotifications, 15000); // Check for alerts every 15 secs
+            
+            fetchNews();
+            updateLivePrices();
+            setInterval(updateLivePrices, 3000);
+        };
+    </script>
+
+</body>
+</html>

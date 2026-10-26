@@ -1,0 +1,495 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitxEX | Profile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- DARK & YELLOW THEME VARIABLES --- */
+        :root { 
+            --bg-dark: #0b0e11; 
+            --bg-card: #181a20; 
+            --bg-hover: #2b3139;
+            --text-light: #eaecef; 
+            --text-muted: #848e9c; 
+            --primary-yellow: #f3ba2f; 
+            --danger-red: #f6465d; 
+            --success-green: #0ecb81; 
+            --border-dark: #2b3139;
+            --overlay: rgba(0, 0, 0, 0.8);
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg-dark); 
+            color: var(--text-light); 
+            margin: 0; 
+            padding-bottom: 80px; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+        /* HEADER SECTION */
+        .profile-header { 
+            background: var(--bg-card); 
+            padding: 30px 20px; 
+            display: flex; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border-dark); 
+            position: relative;
+        }
+        
+        .avatar { 
+            width: 60px; height: 60px; 
+            background: var(--bg-hover); 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; color: var(--text-muted); 
+            margin-right: 15px; 
+            border: 2px solid var(--border-dark);
+        }
+        
+        .user-info { flex: 1; }
+        
+        /* User Name Row with Edit Icon */
+        .user-info-top { display: flex; align-items: center; gap: 10px; }
+        .user-info h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--text-light); }
+        .edit-icon { color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .edit-icon:active { color: var(--primary-yellow); transform: scale(0.9); }
+
+        .user-info p { margin: 4px 0 0; font-size: 12px; color: var(--text-muted); font-family: monospace; }
+        
+        .status-badge { 
+            display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; 
+            margin-top: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .st-unverified { background: var(--bg-hover); color: var(--text-muted); }
+        .st-pending { background: rgba(243, 186, 47, 0.15); color: var(--primary-yellow); }
+        .st-verified { background: rgba(14, 203, 129, 0.15); color: var(--success-green); }
+        .st-rejected { background: rgba(246, 70, 93, 0.15); color: var(--danger-red); }
+
+        /* NOTIFICATIONS */
+        .header-actions { position: absolute; right: 20px; top: 30px; }
+        .notification-wrapper { position: relative; cursor: pointer; color: var(--text-muted); font-size: 20px; display: flex; align-items: center; transition: color 0.2s; }
+        .notification-wrapper:active { color: var(--text-light); }
+        .nav-badge { position: absolute; top: -5px; right: -5px; background: var(--danger-red); color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 10px; display: none; }
+        .notification-dropdown { position: absolute; top: 35px; right: 0px; width: 280px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 10000; border: 1px solid var(--border-dark); font-weight: normal; }
+        .nd-header { padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-dark); color: var(--text-light); font-size: 14px; }
+        .nd-list { max-height: 300px; overflow-y: auto; }
+        .nd-item { padding: 15px; border-bottom: 1px solid var(--border-dark); text-align: left;}
+        .nd-item.unread { border-left: 3px solid var(--primary-yellow); background: rgba(243, 186, 47, 0.05); }
+        .nd-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--text-light); }
+        .nd-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .nd-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        /* MENU LIST */
+        .menu-list { margin-top: 20px; padding: 0 15px; }
+        .menu-item { 
+            background: var(--bg-card); padding: 16px; border-radius: 12px; margin-bottom: 12px; 
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer; 
+            border: 1px solid var(--border-dark); transition: all 0.2s ease;
+        }
+        .menu-item:active { transform: scale(0.98); background: var(--bg-hover); }
+        
+        .mi-left { display: flex; align-items: center; gap: 15px; font-size: 15px; font-weight: 600; color: var(--text-light); }
+        .mi-icon { 
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            background: rgba(243, 186, 47, 0.1); border-radius: 8px;
+            color: var(--primary-yellow); font-size: 14px; 
+        }
+        .mi-right { color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+
+        /* LOGOUT BUTTON */
+        .logout-btn { 
+            margin: 30px 15px; padding: 16px; 
+            background: rgba(246, 70, 93, 0.1); color: var(--danger-red); 
+            text-align: center; border-radius: 12px; font-weight: 700; cursor: pointer; 
+            border: 1px solid rgba(246, 70, 93, 0.2); 
+            transition: 0.2s;
+        }
+        .logout-btn:active { transform: scale(0.98); background: rgba(246, 70, 93, 0.2); }
+
+        /* MODALS (Popups) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay); z-index: 1000; backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--bg-card); width: 80%; max-width: 320px;
+            padding: 25px; border-radius: 16px; border: 1px solid var(--border-dark);
+            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            animation: scaleIn 0.2s ease;
+        }
+        .modal-icon {
+            font-size: 40px; margin-bottom: 15px;
+        }
+        .modal-box h3 { margin: 0 0 10px 0; color: var(--text-light); }
+        .modal-box p { margin: 0 0 20px 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+        
+        .modal-input {
+            width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--border-dark);
+            border-radius: 8px; color: var(--text-light); font-size: 16px; margin-bottom: 20px;
+            box-sizing: border-box; outline: none; text-align: center; transition: border-color 0.2s;
+        }
+        .modal-input:focus { border-color: var(--primary-yellow); }
+
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-modal {
+            flex: 1; padding: 14px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: transform 0.1s;
+        }
+        .btn-modal:active { transform: scale(0.98); }
+        .btn-cancel { background: var(--bg-dark); color: var(--text-muted); border: 1px solid var(--border-dark); }
+        .btn-confirm { background: var(--primary-yellow); color: #000; }
+        .btn-danger { background: var(--danger-red); color: #fff; }
+
+        /* TOAST NOTIFICATION */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-card); color: var(--text-light); padding: 12px 24px;
+            border-radius: 30px; border: 1px solid var(--border-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 2000;
+            display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 14px;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; top: 30px; }
+        .toast i { color: var(--success-green); }
+
+        /* BOTTOM NAV */
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border-dark); height: 65px; display: flex; justify-content: space-around; align-items: center; z-index: 900; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { text-align: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: color 0.3s; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; transition: 0.2s; }
+        .nav-item.active { color: var(--primary-yellow); }
+    </style>
+</head>
+<body>
+
+    <div class="profile-header animate-up">
+        <div class="avatar"><i class="fas fa-user"></i></div>
+        <div class="user-info">
+            <div class="user-info-top">
+                <h2 id="user-display-name">Loading...</h2>
+                <i id="edit-name-icon" class="fas fa-pen edit-icon" onclick="openEditModal()"></i>
+            </div>
+            <p id="user-email">--</p>
+            <p>UID: <span id="user-uid">--</span></p>
+            <span id="kyc-badge" class="status-badge st-unverified">...</span>
+        </div>
+        
+        <div class="header-actions">
+            <div class="notification-wrapper" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                <div class="nav-badge" id="nav-badge">0</div>
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <div class="nd-header">Notifications</div>
+                    <div id="notification-list" class="nd-list">
+                        <div class="nd-empty">No new notifications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-list animate-up" style="animation-delay: 0.1s;">
+        
+        <div class="menu-item" onclick="window.location.href='mobile_kyc.html'">
+            <div class="mi-left">
+                <div class="mi-icon"><i class="fas fa-id-card"></i></div>
+                <span>Identity Verification</span>
+            </div>
+            <div class="mi-right">
+                <span id="kyc-text">Status</span> <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+
+        <div class="menu-item" onclick="window.location.href='mobile_security.html'">
+            <div class="mi-left">
+                <div class="mi-icon"><i class="fas fa-shield-alt"></i></div>
+                <span>Security Center</span>
+            </div>
+            <div class="mi-right"><i class="fas fa-chevron-right"></i></div>
+        </div>
+
+        <div class="menu-item" onclick="window.location.href='mobile_support.html'">
+            <div class="mi-left">
+                <div class="mi-icon"><i class="fas fa-headset"></i></div>
+                <span>Help & Support</span>
+            </div>
+            <div class="mi-right"><i class="fas fa-chevron-right"></i></div>
+        </div>
+
+        <div class="menu-item" onclick="window.location.href='mobile_about.html'">
+            <div class="mi-left">
+                <div class="mi-icon"><i class="fas fa-info-circle"></i></div>
+                <span>About Us</span>
+            </div>
+            <div class="mi-right"><i class="fas fa-chevron-right"></i></div>
+        </div>
+
+    </div>
+
+    <div class="logout-btn animate-up" style="animation-delay: 0.2s;" onclick="openLogoutModal()">Log Out</div>
+
+    <div class="nav-bar">
+        <div class="nav-item" onclick="window.location.href='mobile.html'"><i class="fas fa-home"></i> Home</div>
+        <div class="nav-item" onclick="window.location.href='mobile_market.html'"><i class="fas fa-chart-bar"></i> Markets</div>
+        <div class="nav-item" onclick="window.location.href='mobile_exchange.html'"><i class="fas fa-exchange-alt"></i> Trade</div>
+        <div class="nav-item" onclick="window.location.href='mobile_assets.html'"><i class="fas fa-wallet"></i> Balance</div>
+        <div class="nav-item active" onclick="window.location.href='mobile_profile.html'"><i class="fas fa-user"></i> Me</div>
+    </div>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-msg">Success</span>
+    </div>
+
+    <div id="logout-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon" style="color: var(--danger-red);"><i class="fas fa-sign-out-alt"></i></div>
+            <h3>Log Out</h3>
+            <p>Are you sure you want to log out of your account?</p>
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeModal('logout-modal')">Cancel</button>
+                <button class="btn-modal btn-danger" onclick="confirmLogout()">Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Edit Nickname</h3>
+            <p>Enter a new display name for your profile.</p>
+            <input type="text" id="new-nickname" class="modal-input" placeholder="Nickname">
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeModal('edit-modal')">Cancel</button>
+                <button class="btn-modal btn-confirm" onclick="saveNickname()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let currentUserId = null;
+
+        window.onload = () => {
+            loadProfile();
+            fetchNotifications();
+            setInterval(fetchNotifications, 15000);
+        };
+
+        // --- NOTIFICATION LOGIC ---
+        async function fetchNotifications() {
+            const userId = localStorage.getItem('bitx_user_id');
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/notifications/${userId}`); 
+                if (!response.ok) return;
+                const notifications = await response.json();
+                
+                const badge = document.getElementById('nav-badge');
+                const list = document.getElementById('notification-list');
+                
+                const unread = notifications.filter(n => !n.isRead);
+                
+                if (unread.length > 0) {
+                    badge.innerText = unread.length;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                if (notifications.length === 0) {
+                    list.innerHTML = '<div class="nd-empty">No new notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = notifications.map(n => `
+                    <div class="nd-item ${n.isRead ? '' : 'unread'}">
+                        <div class="nd-title">${n.title}</div>
+                        <div class="nd-msg">${n.message}</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">
+                            ${new Date(n.createdAt).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("Failed to load notifications:", error);
+            }
+        }
+
+        async function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            const isShowing = dropdown.style.display === 'flex';
+            
+            if (isShowing) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'flex';
+                const userId = localStorage.getItem('bitx_user_id');
+                if (userId) {
+                    fetch(`/api/notifications/${userId}/read`, { method: 'POST' })
+                        .then(() => fetchNotifications()); 
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notification-dropdown').style.display = 'none';
+            }
+        });
+
+        // --- CORE FUNCTIONS ---
+        async function loadProfile() {
+            const userId = localStorage.getItem('bitx_user_id');
+            if(!userId) return window.location.href = 'login.html';
+            currentUserId = userId;
+
+            try {
+                const res = await fetch(`${API_URL}/user/${userId}`);
+                const user = await res.json();
+                
+                // Set Email
+                const email = user.email || "User";
+                const masked = email.replace(/(^...)(.*)(@.*)/, "$1***$3");
+                document.getElementById('user-email').innerText = masked;
+                document.getElementById('user-uid').innerText = user.uid;
+
+                // Set KYC Status
+                const status = user.kyc ? user.kyc.status : 'unverified';
+                updateKycUI(status);
+
+                // FIXED: Set Name Logic based on KYC Status
+                const editIcon = document.getElementById('edit-name-icon');
+                
+                if (status === 'verified' && user.kyc && user.kyc.name) {
+                    // Use legal KYC name for verified users and hide the edit button
+                    document.getElementById('user-display-name').innerText = user.kyc.name;
+                    editIcon.style.display = 'none';
+                } else {
+                    // Allow editable nickname for unverified or pending users
+                    const display = localStorage.getItem('bitx_nickname') || user.nickname || "User";
+                    document.getElementById('user-display-name').innerText = display;
+                    editIcon.style.display = 'inline-block';
+                }
+
+            } catch(e) { 
+                console.error(e); 
+                showToast('Connection error', true);
+            }
+        }
+
+        function updateKycUI(status) {
+            const badge = document.getElementById('kyc-badge');
+            const text = document.getElementById('kyc-text');
+
+            if (status === 'verified') {
+                badge.className = 'status-badge st-verified';
+                badge.innerText = 'Verified';
+                text.innerText = 'Verified';
+                text.style.color = 'var(--success-green)';
+            } else if (status === 'pending') {
+                badge.className = 'status-badge st-pending';
+                badge.innerText = 'Reviewing';
+                text.innerText = 'In Progress';
+                text.style.color = 'var(--primary-yellow)';
+            } else if (status === 'rejected') {
+                badge.className = 'status-badge st-rejected';
+                badge.innerText = 'Failed';
+                text.innerText = 'Try Again';
+                text.style.color = 'var(--danger-red)';
+            } else {
+                badge.className = 'status-badge st-unverified';
+                badge.innerText = 'Unverified';
+                text.innerText = 'Go to verify';
+            }
+        }
+
+        // --- MODAL LOGIC ---
+        function openLogoutModal() {
+            document.getElementById('logout-modal').style.display = 'flex';
+        }
+
+        function openEditModal() {
+            const currentName = document.getElementById('user-display-name').innerText;
+            document.getElementById('new-nickname').value = currentName;
+            document.getElementById('edit-modal').style.display = 'flex';
+            document.getElementById('new-nickname').focus();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // Close modal if clicking outside box
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        // --- ACTION HANDLERS ---
+        function confirmLogout() {
+            localStorage.removeItem('bitx_user_id');
+            // Visual feedback
+            closeModal('logout-modal');
+            showToast('Logged out successfully');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
+        }
+
+        function saveNickname() {
+            const newName = document.getElementById('new-nickname').value.trim();
+            if(newName.length < 2) {
+                showToast('Name too short', true);
+                return;
+            }
+
+            // Save locally and update UI
+            localStorage.setItem('bitx_nickname', newName);
+            document.getElementById('user-display-name').innerText = newName;
+            
+            closeModal('edit-modal');
+            showToast('Nickname updated');
+        }
+
+        // --- TOAST HELPER ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const icon = toast.querySelector('i');
+
+            toastMsg.innerText = msg;
+            if(isError) {
+                icon.className = 'fas fa-exclamation-circle';
+                icon.style.color = 'var(--danger-red)';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = 'var(--success-green)';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
